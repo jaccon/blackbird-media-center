@@ -2,7 +2,10 @@
 
 The **BlackBird Media Center** is a modern, lightweight, fast, and highly customizable media server and player built on Node.js (Express) and WebSockets. It is designed to run seamlessly in containerized environments (Docker) to stream files, proxy security cameras, play slideshows, and allow real-time control from your smartphone.
 
+![BlackBird Media Center Dashboard](/Users/jaccon/Documents/Lab/BlackBird%20MC/v2/app/documentations/screenshot.jpg)
+
 ---
+
 
 ## 📋 Table of Features
 
@@ -34,8 +37,10 @@ Here is the complete list of capabilities that the BlackBird Media Center offers
    * Create new folders, delete files, or clean directories directly from the web client.
 8. **Large Files Chunked Uploader**: Robust upload pipeline splitting large video files into 5MB chunks to avoid web browser timeouts or connection drops.
 9. **Private Locked/Hidden Area**: Password-protect specific folders and files. Hidden files are excluded from all lists until authenticated under `/hidden-area`.
+   ![BlackBird Media Center Hidden Area](/Users/jaccon/Documents/Lab/BlackBird%20MC/v2/app/documentations/screenshot2.jpg)
 10. **Multi-language System (i18n)**: Fully translated UI and controls between English, Portuguese, and Spanish.
 11. **Premium Modern UI/UX**: Responsive Bootstrap 5 interface tailored for Smart TVs, desktops, and phones. Designed with glassmorphic cards, default dark mode, and neon purple/fuchsia visual highlights.
+
 
 ---
 

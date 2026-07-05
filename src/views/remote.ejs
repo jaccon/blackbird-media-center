@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="<%= currentLang %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title><%= t('remote_control') %> - Black Bird</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/bootstrap-icons.css">
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    body {
+      background-color: #020617 !important;
+      background-image: radial-gradient(circle at top, rgba(124, 58, 237, 0.12), transparent 60%);
+      color: #f8fafc;
+      font-family: 'Inter', sans-serif;
+      touch-action: manipulation;
+      overflow-x: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    
+    .remote-container {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 1.5rem 1rem;
+    }
+
+    .glass-remote-panel {
+      background-color: rgba(15, 23, 42, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 24px;
+    }
+
+    /* D-PAD Style */
+    .dpad-container {
+      position: relative;
+      width: 220px;
+      height: 220px;
+      margin: 2rem auto;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));
+      box-shadow: 0 15px 35px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.05);
+      border: 2px solid rgba(124, 58, 237, 0.25);
+    }
+
+    .dpad-btn {
+      position: absolute;
+      background: transparent;
+      border: 0;
+      color: #94a3b8;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+
+    .dpad-btn:active {
+      color: #c084fc;
+      transform: scale(1.1);
+    }
+
+    .dpad-up {
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 50px;
+    }
+    
+    .dpad-down {
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 50px;
+    }
+
+    .dpad-left {
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 50px;
+      height: 60px;
+    }
+
+    .dpad-right {
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 50px;
+      height: 60px;
+    }
+
+    .dpad-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      border: 3px solid #0f172a;
+      box-shadow: 0 8px 20px rgba(124, 58, 237, 0.35);
+      color: white;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dpad-center:active {
+      background: linear-gradient(135deg, #9061f9, #6366f1);
+      box-shadow: 0 4px 10px rgba(124, 58, 237, 0.2);
+      transform: translate(-50%, -50%) scale(0.95);
+    }
+
+    /* Remote Button Styles */
+    .btn-remote {
+      background-color: rgba(30, 41, 59, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      color: #cbd5e1;
+      border-radius: 16px;
+      padding: 0.8rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-remote:active {
+      background-color: rgba(124, 58, 237, 0.15);
+      border-color: rgba(124, 58, 237, 0.4);
+      color: #e2e8f0;
+      transform: scale(0.95);
+    }
+
+    .btn-remote-accent {
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(79, 70, 229, 0.2));
+      border: 1px solid rgba(124, 58, 237, 0.3);
+      color: #e9d5ff;
+    }
+
+    .btn-remote-accent:active {
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      color: white;
+    }
+
+    .status-badge {
+      font-size: 12px;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-connected {
+      background-color: rgba(16, 185, 129, 0.1);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .status-disconnected {
+      background-color: rgba(239, 68, 68, 0.1);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .status-connected .pulse-dot {
+      background-color: #10b981;
+      animation: pulse 2s infinite;
+    }
+
+    .status-disconnected .pulse-dot {
+      background-color: #ef4444;
+    }
+
+    /* Screen auth overlay styles */
+    #authOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #020617;
+      background-image: radial-gradient(circle at top, rgba(124, 58, 237, 0.15), transparent 70%);
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.9); opacity: 1; }
+      50% { transform: scale(1.2); opacity: 0.5; }
+      100% { transform: scale(0.9); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Overlay de Aprovação / Pareamento -->
+  <div id="authOverlay">
+    <div class="glass-remote-panel p-5 text-center max-w-sm" style="max-width: 360px;">
+      <i class="bi bi-shield-lock-fill text-gradient d-block mb-4" style="font-size: 3.5rem;"></i>
+      <h4 class="text-white fw-bold font-outfit mb-3" id="authTitle"><%= t('remote_control') %></h4>
+      <p class="text-secondary small mb-4" id="authText"><%= t('waiting_approval') %></p>
+      
+      <div id="authSpinner" class="spinner-border text-fuchsia-500 mb-3" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+
+      <button id="retryBtn" class="btn btn-premium-primary w-100 border-0 d-none mt-2" onclick="window.location.reload()">
+        <i class="bi bi-arrow-clockwise me-1.5"></i> Tentar Novamente
+      </button>
+    </div>
+  </div>
+
+  <div class="remote-container d-flex flex-column justify-content-between">
+    
+    <!-- Topo -->
+    <div class="d-flex align-items-center justify-content-between w-100 mb-3 px-2">
+      <div class="d-flex align-items-center gap-2">
+        <img src="/images/logo.svg" style="width: 28px; height: 28px;" alt="Logo">
+        <span class="fw-bold font-outfit text-white fs-6">Black Bird</span>
+      </div>
+      <div>
+        <span id="connectionStatus" class="status-badge status-disconnected">
+          <span class="pulse-dot"></span>
+          <span id="statusText"><%= t('status_disconnected') %></span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Painel de Digitação Remota (Teclado Virtual) -->
+    <div id="keyboardPanel" class="glass-remote-panel p-3 mb-3 d-none animate-fade-in" style="border: 1px solid rgba(124, 58, 237, 0.35); background: linear-gradient(135deg, rgba(124, 58, 237, 0.05), rgba(15, 23, 42, 0.8));">
+      <h6 class="text-uppercase tracking-widest small mb-2 d-flex align-items-center gap-2" style="font-size: 10px; color: #c084fc !important;">
+        <i class="bi bi-keyboard-fill"></i>
+        <span><%= t('remote_keyboard') %></span>
+      </h6>
+      <div class="input-group">
+        <input type="text" id="keyboardInput" class="form-control input-premium" placeholder="<%= t('type_to_screen') %>" oninput="sendTextToScreen(this.value)" onkeydown="handleKeyboardKeyDown(event)">
+        <button class="btn btn-premium-primary border-0 px-3 d-flex align-items-center justify-content-center" onclick="submitTextToScreen()"><i class="bi bi-send-fill"></i></button>
+      </div>
+    </div>
+
+    <!-- Painel de Controle Principal -->
+    <div class="glass-remote-panel p-4 flex-grow-1 d-flex flex-column justify-content-around">
+      
+      <!-- Seção Navegação D-PAD -->
+      <div>
+        <h6 class="text-uppercase text-secondary tracking-widest text-center small mb-1" style="font-size: 10px;"><%= t('navigation') %></h6>
+        
+        <div class="dpad-container">
+          <button class="dpad-btn dpad-up" onclick="sendCommand('navigate_up')" aria-label="Up">
+            <i class="bi bi-chevron-up"></i>
+          </button>
+          <button class="dpad-btn dpad-left" onclick="sendCommand('navigate_left')" aria-label="Left">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+          <button class="dpad-center" onclick="sendCommand('select')">
+            OK
+          </button>
+          <button class="dpad-btn dpad-right" onclick="sendCommand('navigate_right')" aria-label="Right">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+          <button class="dpad-btn dpad-down" onclick="sendCommand('navigate_down')" aria-label="Down">
+            <i class="bi bi-chevron-down"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Seção Modos de Visualização -->
+      <div class="mb-3">
+        <h6 class="text-uppercase text-secondary tracking-widest text-center small mb-3" style="font-size: 10px;"><%= t('view_mode') %></h6>
+        <div class="row g-2">
+          <div class="col-4">
+            <button class="btn btn-remote w-100 py-2.5" onclick="sendViewCommand('list')">
+              <i class="bi bi-list fs-5"></i>
+              <span style="font-size: 11px;"><%= t('list_view') %></span>
+            </button>
+          </div>
+          <div class="col-4">
+            <button class="btn btn-remote w-100 py-2.5" onclick="sendViewCommand('grid')">
+              <i class="bi bi-grid-3x3-gap-fill fs-5"></i>
+              <span style="font-size: 11px;"><%= t('grid_view') %></span>
+            </button>
+          </div>
+          <div class="col-4">
+            <button class="btn btn-remote w-100 py-2.5" onclick="sendViewCommand('slideshow')">
+              <i class="bi bi-play-btn-fill fs-5"></i>
+              <span style="font-size: 11px;"><%= t('slideshow_view') %></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção Controle de Mídia -->
+      <div class="mb-3">
+        <div class="row g-2 align-items-center justify-content-center">
+          <div class="col-3">
+            <button class="btn btn-remote w-100 py-3" onclick="sendCommand('prev')" title="Anterior">
+              <i class="bi bi-skip-start-fill fs-4"></i>
+            </button>
+          </div>
+          <div class="col-4">
+            <button class="btn btn-remote btn-remote-accent w-100 py-3" onclick="sendCommand('play')" title="Play / Pause">
+              <i class="bi bi-play-pause-fill fs-3"></i>
+            </button>
+          </div>
+          <div class="col-3">
+            <button class="btn btn-remote w-100 py-3" onclick="sendCommand('next')" title="Próximo">
+              <i class="bi bi-skip-end-fill fs-4"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção Volume & Extras -->
+      <div>
+        <div class="row g-2">
+          <div class="col-4">
+            <button class="btn btn-remote w-100 py-2.5" onclick="sendCommand('volume_down')">
+              <i class="bi bi-volume-down-fill fs-5"></i>
+              <span style="font-size: 10px;">Vol -</span>
+            </button>
+          </div>
+          <div class="col-4">
+            <button class="btn btn-remote w-100 py-2.5" onclick="sendCommand('mute')">
+              <i class="bi bi-volume-mute-fill fs-5"></i>
+              <span style="font-size: 10px;">Mute</span>
+            </button>
+          </div>
+          <div class="col-4">
+            <button class="btn btn-remote w-100 py-2.5" onclick="sendCommand('volume_up')">
+              <i class="bi bi-volume-up-fill fs-5"></i>
+              <span style="font-size: 10px;">Vol +</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção de Upload de Mídia Mobile -->
+      <div class="border-top border-secondary border-opacity-10 pt-3 mt-3">
+        <h6 class="text-uppercase text-secondary tracking-widest text-center small mb-2.5" style="font-size: 10px;"><%= t('upload_media') %></h6>
+        <div class="d-flex flex-column align-items-center w-100">
+          <input type="file" id="mobileFileInput" class="d-none" accept="image/*,video/*" onchange="handleMobileFileSelect(this)">
+          <button id="mobileUploadBtn" class="btn btn-remote w-100 py-2.5 d-flex align-items-center justify-content-center gap-2" onclick="document.getElementById('mobileFileInput').click()">
+            <i class="bi bi-cloud-arrow-up-fill fs-5 text-gradient"></i>
+            <span class="fw-semibold font-outfit" style="font-size: 13px;"><%= t('upload_media') %></span>
+          </button>
+          
+          <!-- Progresso do Upload -->
+          <div id="mobileUploadProgressContainer" class="w-100 mt-2 d-none">
+            <div class="d-flex justify-content-between text-secondary small mb-1" style="font-size: 10px;">
+              <span id="mobileUploadStatusText"><%= t('uploading') %></span>
+              <span id="mobileUploadPercentText">0%</span>
+            </div>
+            <div class="progress" style="height: 6px; background-color: rgba(2, 6, 23, 0.5);">
+              <div id="mobileUploadProgressBar" class="progress-bar bg-fuchsia-500" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Botões de Ação de Rodapé (Voltar e Tela Cheia) -->
+    <div class="row g-2 mt-4 px-1">
+      <div class="col-6">
+        <button class="btn btn-remote w-100 py-2.5" onclick="sendCommand('back')" style="background-color: rgba(220, 53, 69, 0.1); border-color: rgba(220, 53, 69, 0.2); color: #f87171;">
+          <i class="bi bi-arrow-left"></i>
+          <span class="small font-outfit ms-1.5"><%= t('back_to_dashboard') %></span>
+        </button>
+      </div>
+      <div class="col-6">
+        <button class="btn btn-remote w-100 py-2.5" onclick="sendCommand('fullscreen')">
+          <i class="bi bi-fullscreen"></i>
+          <span class="small font-outfit ms-1.5"><%= t('fullscreen') %></span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let ws;
+    const connectionStatus = document.getElementById('connectionStatus');
+    const statusText = document.getElementById('statusText');
+    const authOverlay = document.getElementById('authOverlay');
+    const authText = document.getElementById('authText');
+    const authSpinner = document.getElementById('authSpinner');
+    const retryBtn = document.getElementById('retryBtn');
+
+    function updateStatus(isConnected) {
+      if (isConnected) {
+        connectionStatus.className = 'status-badge status-connected';
+        statusText.textContent = '<%= t("status_connected") %>';
+      } else {
+        connectionStatus.className = 'status-badge status-disconnected';
+        statusText.textContent = '<%= t("status_disconnected") %>';
+        authOverlay.style.display = 'flex';
+        authText.textContent = '<%= t("waiting_approval") %>';
+        authSpinner.style.display = 'inline-block';
+        retryBtn.classList.add('d-none');
+      }
+    }
+
+    function getCleanDeviceName() {
+      const ua = navigator.userAgent;
+      if (/android/i.test(ua)) return 'Android';
+      if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return 'iPhone/iOS';
+      return 'Celular';
+    }
+
+    function connectWS() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const pairId = urlParams.get('pairId') || '';
+
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${protocol}//${window.location.host}`);
+
+      ws.onopen = () => {
+        ws.send(JSON.stringify({
+          type: 'register',
+          role: 'remote',
+          pairId: pairId,
+          userAgent: getCleanDeviceName()
+        }));
+        updateStatus(true);
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'auth_result') {
+            if (data.authorized) {
+              triggerHaptic();
+              authOverlay.style.display = 'none';
+            } else {
+              triggerHaptic();
+              authText.textContent = '<%= t("connection_rejected") %>';
+              authSpinner.style.display = 'none';
+              retryBtn.classList.remove('d-none');
+              ws.close();
+            }
+          } else if (data.type === 'input_focus') {
+            const keyboardPanel = document.getElementById('keyboardPanel');
+            const keyboardInput = document.getElementById('keyboardInput');
+            
+            keyboardPanel.classList.remove('d-none');
+            keyboardInput.type = data.inputType === 'password' ? 'password' : 'text';
+            keyboardInput.value = data.inputValue || '';
+            if (data.placeholder) {
+              keyboardInput.placeholder = data.placeholder;
+            }
+            keyboardInput.focus();
+          } else if (data.type === 'input_blur') {
+            const keyboardPanel = document.getElementById('keyboardPanel');
+            const keyboardInput = document.getElementById('keyboardInput');
+            
+            keyboardPanel.classList.add('d-none');
+            keyboardInput.blur();
+            keyboardInput.value = '';
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      };
+
+      ws.onclose = () => {
+        updateStatus(false);
+        // Tentar reconectar após 4s se não foi rejeitado
+        if (authText.textContent !== '<%= t("connection_rejected") %>') {
+          setTimeout(connectWS, 4000);
+        }
+      };
+
+      ws.onerror = () => {
+        updateStatus(false);
+      };
+    }
+
+    function triggerHaptic() {
+      if (navigator.vibrate) {
+        navigator.vibrate(40);
+      }
+    }
+
+    function sendCommand(action) {
+      triggerHaptic();
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'command',
+          action: action
+        }));
+      }
+    }
+
+    function sendViewCommand(viewMode) {
+      triggerHaptic();
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'command',
+          action: 'toggle_view',
+          view: viewMode
+        }));
+      }
+    }
+
+    // Remote Keyboard Helper Functions
+    function sendTextToScreen(value) {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'command',
+          action: 'type_text',
+          value: value
+        }));
+      }
+    }
+
+    function handleKeyboardKeyDown(event) {
+      if (event.key === 'Enter') {
+        submitTextToScreen();
+      }
+    }
+
+    function submitTextToScreen() {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'command',
+          action: 'submit_input'
+        }));
+      }
+      document.getElementById('keyboardInput').blur();
+    }
+
+    // Mobile chunked file uploader implementation
+    const CHUNK_SIZE = 1024 * 1024 * 2; // 2MB
+
+    function handleMobileFileSelect(input) {
+      if (!input.files || input.files.length === 0) return;
+      const file = input.files[0];
+      uploadMobileFile(file);
+    }
+
+    function uploadMobileFile(file) {
+      const progressContainer = document.getElementById('mobileUploadProgressContainer');
+      const statusText = document.getElementById('mobileUploadStatusText');
+      const percentText = document.getElementById('mobileUploadPercentText');
+      const progressBar = document.getElementById('mobileUploadProgressBar');
+      const uploadBtn = document.getElementById('mobileUploadBtn');
+      const fileInput = document.getElementById('mobileFileInput');
+
+      progressContainer.classList.remove('d-none');
+      uploadBtn.disabled = true;
+      
+      const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+      let chunkIndex = 0;
+
+      function uploadNextChunk() {
+        if (chunkIndex >= totalChunks) {
+          triggerHaptic();
+          statusText.textContent = '<%= t("upload_complete") %>';
+          percentText.textContent = '100%';
+          progressBar.style.width = '100%';
+          uploadBtn.disabled = false;
+          
+          setTimeout(() => {
+            showPreviewConfirmation(file.name);
+          }, 500);
+          return;
+        }
+
+        const start = chunkIndex * CHUNK_SIZE;
+        const end = Math.min(start + CHUNK_SIZE, file.size);
+        const chunk = file.slice(start, end);
+
+        // Upload to the root shared folder
+        const url = `/upload-chunk?chunkIndex=${chunkIndex}&totalChunks=${totalChunks}&fileName=${encodeURIComponent(file.name)}&currentPath=`;
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', url, true);
+        xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const chunkProgress = (e.loaded / e.total) * 100;
+            const totalProgress = ((chunkIndex + chunkProgress / 100) / totalChunks) * 100;
+            progressBar.style.width = `${totalProgress}%`;
+            percentText.textContent = `${Math.round(totalProgress)}%`;
+          }
+        };
+
+        xhr.onreadystatechange = () => {
+          if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+              try {
+                const res = JSON.parse(xhr.responseText);
+                if (res.success) {
+                  chunkIndex++;
+                  uploadNextChunk();
+                } else {
+                  alert('Erro no envio: ' + (res.error || 'Erro desconhecido'));
+                  resetUploadState();
+                }
+              } catch (e) {
+                alert('Erro ao processar resposta do servidor.');
+                resetUploadState();
+              }
+            } else {
+              alert('Erro HTTP: ' + xhr.status);
+              resetUploadState();
+            }
+          }
+        };
+
+        xhr.send(chunk);
+      }
+
+      function resetUploadState() {
+        progressContainer.classList.add('d-none');
+        uploadBtn.disabled = false;
+        progressBar.style.width = '0%';
+        percentText.textContent = '0%';
+        fileInput.value = '';
+      }
+
+      uploadNextChunk();
+    }
+
+    function showPreviewConfirmation(fileName) {
+      if (confirm('<%= t("auto_preview") %>')) {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({
+            type: 'command',
+            action: 'play_media',
+            path: fileName
+          }));
+        }
+      }
+      setTimeout(() => {
+        document.getElementById('mobileUploadProgressContainer').classList.add('d-none');
+        document.getElementById('mobileFileInput').value = '';
+      }, 3000);
+    }
+
+    document.addEventListener('dblclick', function(e) {
+      e.preventDefault();
+    }, { passive: false });
+
+    connectWS();
+  </script>
+
+</body>
+</html>

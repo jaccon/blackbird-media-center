@@ -1,0 +1,27 @@
+version: '2'
+
+services:
+  blackbirdmc_node:
+    image: node:18
+    container_name: blackbirdmc_node
+    ports:
+      - "5555:5555"
+    networks:
+      - "hosting"
+    restart: always
+    volumes:
+      - ./src:/usr/src/app
+      - /usr/src/app/node_modules
+    working_dir: /usr/src/app
+    command: sh -c "npm install && npm start" 
+    environment:
+      - NODE_ENV=production
+      - PORT=5555 
+      - SHARED_DIR=public/shared
+
+networks:
+  hosting:
+    ipam:
+      config:
+      - subnet: 172.16.155.0/24
+        gateway: 172.16.155.1

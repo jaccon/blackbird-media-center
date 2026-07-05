@@ -1,0 +1,52 @@
+Arguments: 
+  /usr/local/Cellar/node/23.7.0/bin/node /usr/local/Cellar/yarn/1.22.19/libexec/bin/yarn.js dev
+
+PATH: 
+  /usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/Library/Apple/usr/bin:/Users/jaccon/.cargo/bin:/Users/jaccon/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand
+
+Yarn version: 
+  1.22.19
+
+Node version: 
+  23.7.0
+
+Platform: 
+  darwin x64
+
+Trace: 
+  SyntaxError: /Users/jaccon/Desktop/sgixMediaCenter/package.json: Expected double-quoted property name in JSON at position 97 (line 6 column 3)
+      at JSON.parse (<anonymous>)
+      at /usr/local/Cellar/yarn/1.22.19/libexec/lib/cli.js:1629:59
+      at Generator.next (<anonymous>)
+      at step (/usr/local/Cellar/yarn/1.22.19/libexec/lib/cli.js:310:30)
+      at /usr/local/Cellar/yarn/1.22.19/libexec/lib/cli.js:321:13
+
+npm manifest: 
+  {
+    "name": "sgixMediaCenter",
+    "version": "1.0.0",
+    "main": "index.js",
+    "license": "MIT",
+    {
+      "scripts": {
+        "start": "node server.js",
+        "dev": "nodemon server.js"
+      }
+    },
+    "dependencies": {
+      "bootstrap": "^5.3.3",
+      "ejs": "^3.1.10",
+      "express": "^4.21.2",
+      "fs-extra": "^11.3.0",
+      "multer": "^1.4.5-lts.1"
+    },
+    "devDependencies": {
+      "nodemon": "^3.1.9"
+    }
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile

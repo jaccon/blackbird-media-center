@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Black Bird Media Center</title>
+</head>
+
+<body class="bg-dark text-light min-vh-screen">
+
+  <%- include('header') %>
+
+    <!-- Modal de Upload (Necessário por estar no header.ejs) (Bootstrap 5) -->
+    <div class="modal fade animate" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel"
+      aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-content-premium border-0">
+          <div class="modal-header modal-header-premium border-0">
+            <h5 class="modal-title font-outfit fw-bold text-white" id="uploadModalLabel">Upload de Arquivos</h5>
+            <button type="button" class="btn-close btn-close-white" onclick="toggleUploadModal()"
+              aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-4">
+            <input type="hidden" id="currentPath" value="">
+            <label
+              class="d-flex flex-column align-items-center justify-content-center w-100 border border-secondary border-dashed rounded-3 cursor-pointer p-4 bg-dark bg-opacity-25 hover-bg-dark transition-all-200 select-files-box"
+              style="height: 176px; border-style: dashed !important; border-width: 2px !important; border-color: rgba(255,255,255,0.1) !important;">
+              <div class="d-flex flex-column align-items-center justify-content-center text-center">
+                <i class="bi bi-cloud-arrow-up text-secondary fs-1 mb-2 upload-icon"></i>
+                <p class="mb-1 text-light fw-bold small">Selecione arquivos para upload</p>
+                <p class="text-secondary small mb-0" style="font-size: 11px;">Mídia enviada ficará disponível na raiz
+                </p>
+              </div>
+              <input type="file" id="fileInput" class="d-none" multiple>
+            </label>
+            <div id="selectedFilesInfo"
+              class="small text-secondary mt-3 p-3 rounded bg-dark bg-opacity-50 border border-secondary border-opacity-10 d-none"
+              style="max-height: 110px; overflow-y: auto;"></div>
+          </div>
+          <div class="modal-footer modal-footer-premium border-0">
+            <button type="button" class="btn btn-premium-secondary" onclick="toggleUploadModal()">Cancelar</button>
+            <button type="button" class="btn btn-premium-primary border-0" id="uploadFilesBtn">Enviar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container-xl py-4 px-3">
+
+      <!-- Cabeçalho -->
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+          <h2 class="fs-4 fw-bold text-white font-outfit m-0"><%= t('system_status') %></h2>
+          <p class="text-secondary small m-0 mt-1"><%= t('overview_space') %></p>
+        </div>
+        <!-- Link com senha para a Área Oculta -->
+        <a href="/hidden-area"
+          class="btn btn-sm btn-premium-secondary border-0 d-flex align-items-center gap-2 py-2 px-3 shadow-lg hover:border-red-500/30"
+          style="border: 1px solid rgba(220, 53, 69, 0.1) !important;">
+          <i class="bi bi-shield-lock-fill text-danger"></i>
+          <span class="font-outfit fw-semibold"></span>
+        </a>
+      </div>
+
+      <!-- PRIMEIRO SCROLL: Histórico Recente e Últimos Uploads -->
+      <div class="row g-4 mb-4">
+        <!-- Vídeos Assistidos Recentemente -->
+        <div class="col-md-6 col-lg-5">
+          <div class="p-4 rounded-3 border border-secondary border-opacity-10 h-100 flex-column d-flex"
+            style="background-color: rgba(15, 23, 42, 0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <i class="bi bi-clock-history text-fuchsia-500 fs-4"></i>
+              <h3 class="fs-5 fw-bold text-white font-outfit m-0"><%= t('recently_played') %></h3>
+            </div>
+
+            <div class="flex-grow-1">
+              <% if (recentlyPlayed.length===0) { %>
+                <div class="text-center py-4 text-secondary small">
+                  <i class="bi bi-film d-block fs-3 mb-2 opacity-50"></i>
+                  <%= t('no_recent_videos') %>
+                </div>
+                <% } else { %>
+                  <div class="list-group list-group-flush bg-transparent">
+                    <% recentlyPlayed.forEach(video=> { %>
+                      <div
+                        class="list-group-item bg-transparent border-secondary border-opacity-10 px-0 py-2.5 d-flex align-items-center justify-content-between">
+                        <a href="/play?video=<%= encodeURIComponent(video.path) %>"
+                          class="d-flex align-items-center gap-2.5 text-light text-opacity-90 hover-text-white text-decoration-none truncate fw-semibold small">
+                          <i class="bi bi-play-circle-fill text-fuchsia-500 fs-6"></i>
+                          <span class="text-truncate" style="max-width: 280px;" title="<%= video.name %>">
+                            <%= video.name %>
+                          </span>
+                        </a>
+                        <span class="text-secondary" style="font-size: 10px;" title="Tamanho: <%= video.size %>">
+                          <%= video.playedAt %>
+                        </span>
+                      </div>
+                      <% }); %>
+                  </div>
+                  <% } %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Últimos Uploads -->
+        <div class="col-md-6 col-lg-4">
+          <div class="p-4 rounded-3 border border-secondary border-opacity-10 h-100 flex-column d-flex"
+            style="background-color: rgba(15, 23, 42, 0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <i class="bi bi-cloud-check-fill text-primary-emphasis fs-4"></i>
+              <h3 class="fs-5 fw-bold text-white font-outfit m-0"><%= t('latest_uploads') %></h3>
+            </div>
+
+            <div class="flex-grow-1">
+              <% if (latestUploads.length===0) { %>
+                <div class="text-center py-4 text-secondary small">
+                  <i class="bi bi-folder2-open d-block fs-3 mb-2 opacity-50"></i>
+                  <%= t('no_files_shared') %>
+                </div>
+                <% } else { %>
+                  <div class="list-group list-group-flush bg-transparent">
+                    <% latestUploads.forEach(file=> { %>
+                      <% const isVideo=file.name.match(/\.(mp4|webm|ogg|mkv|mov)$/i); %>
+                        <div
+                          class="list-group-item bg-transparent border-secondary border-opacity-10 px-0 py-2.5 d-flex align-items-center justify-content-between">
+                          <a href="<%= isVideo ? `/play?video=${encodeURIComponent(file.path)}` : `/shared/${encodeURIComponent(file.path)}` %>"
+                            <%=isVideo ? '' : 'target="_blank"' %>
+                            class="d-flex align-items-center gap-2.5 text-light text-opacity-90 hover-text-white
+                            text-decoration-none truncate fw-semibold small">
+                            <i
+                              class="fs-6 <%= file.name.match(/\.(jpg|jpeg|png|gif)$/i) ? 'bi bi-image text-primary-emphasis' : isVideo ? 'bi bi-film text-fuchsia-500' : file.name.match(/\.(mp3|wav|ogg|aac|flac)$/i) ? 'bi bi-music-note-beamed text-danger' : 'bi bi-file-earmark-arrow-down text-info' %>"></i>
+                            <span class="text-truncate" style="max-width: 280px;" title="<%= file.name %>">
+                              <%= file.name %>
+                            </span>
+                          </a>
+                          <span class="text-secondary" style="font-size: 10px;"
+                            title="Adicionado em: <%= file.mtime %>">
+                            <%= file.size %>
+                          </span>
+                        </div>
+                        <% }); %>
+                  </div>
+                  <% } %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card QR Code de Acesso Rápido -->
+        <div class="col-md-12 col-lg-3">
+          <div class="p-4 rounded-3 border border-secondary border-opacity-10 h-100 flex-column d-flex align-items-center justify-content-center text-center shadow-lg"
+            style="background-color: rgba(15, 23, 42, 0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+            <div class="mb-3">
+              <i class="bi bi-qr-code-scan text-info fs-4"></i>
+              <h3 class="fs-5 fw-bold text-white font-outfit m-0 mt-1"><%= t('mobile_access') %></h3>
+              <p class="text-secondary small mb-0 mt-1"><%= t('scan_qr') %></p>
+            </div>
+            
+            <div class="p-3 bg-white rounded-3 shadow-lg d-inline-block hover-scale transition-all-200" style="width: 156px; height: 156px; margin: 0 auto;">
+              <div id="dashboard-qrcode"></div>
+            </div>
+            
+            <span class="text-secondary mt-3 font-mono" style="font-size: 11px;" id="dashboard-url-text"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEGUNDO SCROLL: Uso de Disco e Estatísticas BD/Shared -->
+      <div class="row g-4 mb-4">
+        <!-- Card Banco de Dados -->
+        <div class="col-md-6">
+          <div
+            class="p-4 rounded-3 border border-secondary border-opacity-10 h-100 flex-column justify-content-between d-flex"
+            style="background-color: rgba(15, 23, 42, 0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+            <div>
+              <div class="d-flex align-items-center gap-2 mb-3">
+                <i class="bi bi-database text-violet-400 fs-4"></i>
+                <h3 class="fs-5 fw-bold text-white font-outfit m-0"><%= t('database_jsons') %></h3>
+              </div>
+              <p class="text-secondary small leading-relaxed mb-4">
+                <%= t('database_desc') %>
+              </p>
+              <div class="row g-3">
+                <div class="col-6">
+                  <div class="p-3 bg-dark bg-opacity-50 rounded border border-secondary border-opacity-10">
+                    <span class="text-secondary d-block small mb-1"><%= t('cameras_size') %></span>
+                    <span class="fw-mono text-light fw-bold">
+                      <%= stats.db.cameras %>
+                    </span>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="p-3 bg-dark bg-opacity-50 rounded border border-secondary border-opacity-10">
+                    <span class="text-secondary d-block small mb-1"><%= t('favorites_size') %></span>
+                    <span class="fw-mono text-light fw-bold">
+                      <%= stats.db.favorites %>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              class="mt-4 pt-3 border-t border-secondary border-opacity-10 d-flex justify-content-between align-items-center">
+              <span class="text-secondary small"><%= t('total_db_size') %></span>
+              <span class="badge fs-6 bg-violet-600 font-outfit">
+                <%= stats.db.total %>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Diretório Compartilhado -->
+        <div class="col-md-6">
+          <div
+            class="p-4 rounded-3 border border-secondary border-opacity-10 h-100 flex-column justify-content-between d-flex"
+            style="background-color: rgba(15, 23, 42, 0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+            <div>
+              <div class="d-flex align-items-center gap-2 mb-3">
+                <i class="bi bi-folder-fill text-warning fs-4"></i>
+                <h3 class="fs-5 fw-bold text-white font-outfit m-0"><%= t('shared_folder_space') %></h3>
+              </div>
+              <p class="text-secondary small leading-relaxed mb-4">
+                <%= t('shared_folder_desc') %>
+              </p>
+              <div class="row g-3">
+                <div class="col-6">
+                  <div class="p-3 bg-dark bg-opacity-50 rounded border border-secondary border-opacity-10">
+                    <span class="text-secondary d-block small mb-1"><%= t('total_files') %></span>
+                    <span class="fw-mono text-light fw-bold">
+                      <%= stats.shared.count %>
+                    </span>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="p-3 bg-dark bg-opacity-50 rounded border border-secondary border-opacity-10">
+                    <span class="text-secondary d-block small mb-1"><%= t('space_used') %></span>
+                    <span class="fw-mono text-light fw-bold">
+                      <%= stats.shared.totalSize %>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              class="mt-4 pt-3 border-t border-secondary border-opacity-10 d-flex justify-content-between align-items-center">
+              <span class="text-secondary small"><%= t('server_path') %></span>
+              <span class="text-light small font-mono">public/shared</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Divisão e Gráfico de Distribuição -->
+      <div class="p-4 rounded-3 border border-secondary border-opacity-10 mb-4"
+        style="background-color: rgba(15, 23, 42, 0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+        <h3 class="fs-6 fw-bold text-white font-outfit mb-3"><%= t('disk_distribution') %></h3>
+
+        <!-- Progress Bar Empilhada -->
+        <div class="progress mb-3"
+          style="height: 24px; background-color: rgba(2, 6, 23, 0.5); border: 1px solid rgba(255, 255, 255, 0.05);">
+          <% if (stats.shared.rawTotalSize> 0) { %>
+            <div class="progress-bar bg-fuchsia-600" role="progressbar" style="width: <%= stats.videos.percentage %>%;"
+              aria-valuenow="<%= stats.videos.percentage %>" aria-valuemin="0" aria-valuemax="100"
+              title="<%= t('videos') %>: <%= stats.videos.percentage %>%"></div>
+            <div class="progress-bar bg-primary" role="progressbar" style="width: <%= stats.photos.percentage %>%;"
+              aria-valuenow="<%= stats.photos.percentage %>" aria-valuemin="0" aria-valuemax="100"
+              title="<%= t('photos') %>: <%= stats.photos.percentage %>%"></div>
+            <div class="progress-bar bg-danger" role="progressbar" style="width: <%= stats.music.percentage %>%;"
+              aria-valuenow="<%= stats.music.percentage %>" aria-valuemin="0" aria-valuemax="100"
+              title="<%= t('music') %>: <%= stats.music.percentage %>%"></div>
+            <div class="progress-bar bg-secondary" role="progressbar" style="width: <%= stats.others.percentage %>%;"
+              aria-valuenow="<%= stats.others.percentage %>" aria-valuemin="0" aria-valuemax="100"
+              title="<%= t('others') %>: <%= stats.others.percentage %>%"></div>
+            <% } else { %>
+              <div class="progress-bar bg-secondary" role="progressbar" style="width: 100%;" aria-valuenow="100"
+                aria-valuemin="0" aria-valuemax="100"><%= t('empty_folder') %></div>
+              <% } %>
+        </div>
+
+        <!-- Legendas -->
+        <div class="d-flex flex-wrap gap-4 text-xs font-semibold text-secondary">
+          <div class="d-flex align-items-center gap-2">
+            <span class="d-inline-block rounded-circle"
+              style="width: 10px; height: 10px; background-color: #d946ef;"></span>
+            <span class="text-light"><%= t('videos') %> (<%= stats.videos.percentage %>%)</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="d-inline-block rounded-circle"
+              style="width: 10px; height: 10px; background-color: #0d6efd;"></span>
+            <span class="text-light"><%= t('photos') %> (<%= stats.photos.percentage %>%)</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="d-inline-block rounded-circle"
+              style="width: 10px; height: 10px; background-color: #dc3545;"></span>
+            <span class="text-light"><%= t('music') %> (<%= stats.music.percentage %>%)</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="d-inline-block rounded-circle"
+              style="width: 10px; height: 10px; background-color: #6c757d;"></span>
+            <span class="text-light"><%= t('others') %> (<%= stats.others.percentage %>%)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cards de Categorias Grid -->
+      <div class="row g-4">
+        <!-- Videos -->
+        <div class="col-sm-6 col-lg-3">
+          <div
+            class="p-4 rounded-3 border border-secondary border-opacity-10 h-100 transition-all duration-300 hover:scale-[1.02] hover:border-fuchsia-500/30"
+            style="background-color: rgba(15, 23, 42, 0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <span class="text-fuchsia-400 small fw-bold font-outfit uppercase tracking-wider"><%= t('videos') %></span>
+              <i class="bi bi-film text-fuchsia-400 fs-4"></i>
+            </div>
+            <h4 class="fs-3 fw-bold text-white font-mono m-0">
+              <%= stats.videos.count %>
+            </h4>
+            <span class="text-secondary small mt-1 d-block">
+              <%= stats.videos.size %> <%= t('total') %>
+            </span>
+          </div>
+        </div>
+
+        <!-- Photos -->
+        <div class="col-sm-6 col-lg-3">
+          <div
+            class="p-4 rounded-3 border border-secondary border-opacity-10 h-100 transition-all duration-300 hover:scale-[1.02] hover:border-primary/30"
+            style="background-color: rgba(15, 23, 42, 0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <span class="text-primary small fw-bold font-outfit uppercase tracking-wider"><%= t('photos') %></span>
+              <i class="bi bi-image text-primary fs-4"></i>
+            </div>
+            <h4 class="fs-3 fw-bold text-white font-mono m-0">
+              <%= stats.photos.count %>
+            </h4>
+            <span class="text-secondary small mt-1 d-block">
+              <%= stats.photos.size %> <%= t('total') %>
+            </span>
+          </div>
+        </div>
+
+        <!-- Music -->
+        <div class="col-sm-6 col-lg-3">
+          <div
+            class="p-4 rounded-3 border border-secondary border-opacity-10 h-100 transition-all duration-300 hover:scale-[1.02] hover:border-danger/30"
+            style="background-color: rgba(15, 23, 42, 0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <span class="text-danger small fw-bold font-outfit uppercase tracking-wider"><%= t('music') %></span>
+              <i class="bi bi-music-note-beamed text-danger fs-4"></i>
+            </div>
+            <h4 class="fs-3 fw-bold text-white font-mono m-0">
+              <%= stats.music.count %>
+            </h4>
+            <span class="text-secondary small mt-1 d-block">
+              <%= stats.music.size %> <%= t('total') %>
+            </span>
+          </div>
+        </div>
+
+        <!-- Others -->
+        <div class="col-sm-6 col-lg-3">
+          <div
+            class="p-4 rounded-3 border border-secondary border-opacity-10 h-100 transition-all duration-300 hover:scale-[1.02] hover:border-secondary/30"
+            style="background-color: rgba(15, 23, 42, 0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <span class="text-secondary small fw-bold font-outfit uppercase tracking-wider"><%= t('others') %></span>
+              <i class="bi bi-file-earmark-arrow-down text-secondary fs-4"></i>
+            </div>
+            <h4 class="fs-3 fw-bold text-white font-mono m-0">
+              <%= stats.others.count %>
+            </h4>
+            <span class="text-secondary small mt-1 d-block">
+              <%= stats.others.size %> <%= t('total') %>
+            </span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- JS assets -->
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/sweetalert2.all.min.js"></script>
+    <script src="/js/scripts.js"></script>
+
+    <script>
+      const fileInput = document.getElementById('fileInput');
+      if (fileInput) {
+        fileInput.addEventListener('change', function () {
+          const info = document.getElementById('selectedFilesInfo');
+          if (info) {
+            info.classList.remove('d-none');
+            info.innerHTML = Array.from(fileInput.files).map(f => f.name).join('<br>');
+          }
+        });
+      }
+
+      // Inicialização do QR Code do Dashboard
+      window.addEventListener('DOMContentLoaded', () => {
+        const dId = sessionStorage.getItem('bb_player_id') || '';
+        const urlText = document.getElementById("dashboard-url-text");
+        if (urlText) {
+          urlText.textContent = "<%= remoteUrl.replace(/^https?:\/\//, '') %>?pairId=" + dId;
+        }
+
+        const qrDashContainer = document.getElementById("dashboard-qrcode");
+        if (qrDashContainer) {
+          new QRCode(qrDashContainer, {
+            text: "<%= remoteUrl %>?pairId=" + dId,
+            width: 124,
+            height: 124,
+            colorDark: "#0f172a",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.M
+          });
+        }
+      });
+    </script>
+</body>
+
+</html>

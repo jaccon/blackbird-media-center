@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Área Oculta - Autenticação</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/bootstrap-icons.css">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="bg-dark text-light min-vh-screen d-flex align-items-center justify-content-center">
+  <div class="p-4 rounded-3 border border-secondary border-opacity-10 text-center shadow-lg" style="background-color: rgba(15, 23, 42, 0.65); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); max-width: 400px; width: 100%;">
+    <i class="bi bi-shield-lock-fill text-danger mb-3 d-block" style="font-size: 3.5rem;"></i>
+    <h3 class="fs-5 fw-bold text-white font-outfit">Área Oculta Protegida</h3>
+    <p class="text-secondary small mt-1 mb-4">Insira a senha de acesso para visualizar os arquivos ocultados.</p>
+    
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger py-2 px-3 small border-0 mb-3" style="background-color: rgba(220,53,69,0.1); color: #ea868f;"><%= error %></div>
+    <% } %>
+
+    <form action="/hidden-area/auth" method="POST">
+      <div class="mb-3">
+        <input type="password" name="password" placeholder="Senha de Acesso" required class="form-control input-premium text-center">
+      </div>
+      <button type="submit" class="btn btn-premium-primary w-100 border-0">Acessar Área</button>
+    </form>
+    <a href="/" class="btn btn-link text-secondary text-decoration-none small d-block mt-3 hover-text-white transition-all-200">Voltar ao Dashboard</a>
+  </div>
+</body>
+</html>

@@ -1,0 +1,7 @@
+hts-cache
+node_modules
+shared
+src/public/shared
+src/package-lock.json
+src/datacache
+bmad4all

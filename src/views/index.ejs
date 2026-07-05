@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Black Bird Media Center</title>
+  <!-- Lightbox Gallery CSS -->
+  <link rel="stylesheet" href="/css/lightbox.min.css">
+</head>
+<body class="bg-dark text-light min-vh-screen">
+
+  <%- include('header') %>
+
+  <div class="container-xl py-4 px-3">
+    <%- include('nav') %>
+
+    <!-- Resultados da Busca Feedback -->
+    <% if (typeof search !== 'undefined' && search) { %>
+      <div class="alert alert-dark d-flex align-items-center justify-content-between mb-4 border border-secondary border-opacity-10 rounded-3 py-2 px-3" style="background-color: rgba(124, 58, 237, 0.05);">
+        <span class="text-white-50 small">Resultados da busca global por: <strong class="text-white">"<%= search %>"</strong></span>
+        <a href="/explorer" class="btn btn-sm btn-link text-decoration-none text-gradient fw-bold p-0">Limpar Busca</a>
+      </div>
+    <% } %>
+
+    <!-- VISUALIZAÇÃO EM GRADE -->
+    <div id="gridView" class="d-none">
+      <div class="row g-4">
+        
+        <% contents.forEach(item => { %>
+          <% const itemPath = item.path || (currentPath ? `${currentPath}/${item.name}` : item.name); %>
+          <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+            <div class="card card-premium position-relative">
+              
+              <!-- Estrela de Favorito Flutuante (Apenas para arquivos) -->
+              <% if (item.isFile) { %>
+                <div class="position-absolute top-0 end-0 m-3 z-3">
+                  <form action="/favorites/toggle" method="POST" class="m-0">
+                    <input type="hidden" name="file" value="<%= itemPath %>">
+                    <button type="submit" class="btn btn-dark btn-sm p-1.5 rounded-3 border-secondary border-opacity-20 text-warning hover-scale cursor-pointer" style="background: rgba(15, 23, 42, 0.85);">
+                      <i class="bi <%= favorites.includes(itemPath) ? 'bi-star-fill' : 'bi-star' %> fs-6"></i>
+                    </button>
+                  </form>
+                </div>
+              <% } %>
+
+              <!-- Área de Preview ou Ícone -->
+              <div class="ratio ratio-16x9 bg-black overflow-hidden d-flex align-items-center justify-content-center">
+                <% if (item.isFile && item.name.match(/\.(jpg|jpeg|png|gif)$/i)) { %>
+                  <a href="/shared/<%= encodeURIComponent(itemPath) %>" data-lightbox="gallery" data-title="<%= item.name %>" class="w-100 h-100">
+                    <img src="/shared/<%= encodeURIComponent(itemPath) %>" 
+                         class="w-100 h-100 object-cover transition-all-200"
+                         alt="<%= item.name %>" style="object-fit: cover;">
+                  </a>
+                <% } else if (item.isFile && item.name.match(/\.(mp4|webm|ogg|mkv|mov)$/i)) { %>
+                  <!-- Ícone de Vídeo com Botão Play -->
+                  <a href="/play?video=<%= encodeURIComponent(itemPath) %>" class="w-100 h-100 d-flex flex-column align-items-center justify-content-center text-decoration-none group-play position-relative">
+                    <i class="bi bi-film text-secondary fs-2 transition-all-200 icon-film"></i>
+                    <div class="position-absolute inset-0 d-flex align-items-center justify-content-center bg-dark bg-opacity-25 opacity-0 play-overlay transition-all-200 w-100 h-100">
+                      <i class="bi bi-play-circle-fill text-gradient fs-1"></i>
+                    </div>
+                  </a>
+                <% } else if (item.isFile && item.name.match(/\.(mp3|wav|ogg|aac|flac)$/i)) { %>
+                  <!-- Ícone de Audio -->
+                  <a href="/shared/<%= encodeURIComponent(itemPath) %>" target="_blank" class="w-100 h-100 d-flex align-items-center justify-content-center text-decoration-none bg-dark bg-opacity-25 hover-bg-dark transition-all-200">
+                    <i class="bi bi-music-note-beamed text-danger fs-2"></i>
+                  </a>
+                <% } else if (item.isFile) { %>
+                  <!-- Arquivos Genéricos -->
+                  <a href="/shared/<%= encodeURIComponent(itemPath) %>" target="_blank" class="w-100 h-100 d-flex align-items-center justify-content-center text-decoration-none bg-dark bg-opacity-25 hover-bg-dark transition-all-200">
+                    <i class="bi bi-file-earmark-arrow-down text-info fs-2"></i>
+                  </a>
+                <% } else { %>
+                  <!-- Pastas no Grid -->
+                  <a href="/explorer?path=<%= encodeURIComponent(itemPath) %>" class="w-100 h-100 d-flex align-items-center justify-content-center text-decoration-none bg-dark hover-bg-dark transition-all-200" style="background-color: rgba(15, 23, 42, 0.4) !important;">
+                    <i class="bi bi-folder-fill text-warning" style="font-size: 3rem;"></i>
+                  </a>
+                <% } %>
+              </div>
+
+              <!-- Informações do Card -->
+              <div class="card-body d-flex flex-column justify-content-between p-3" style="min-height: 120px;">
+                <div>
+                  <h6 class="card-title text-white font-outfit fw-bold text-truncate mb-1" title="<%= item.name %>"><%= item.name %></h6>
+                  <p class="text-secondary small mb-0">
+                    <% if (item.isFile) { %>
+                      <%= (item.size / 1024).toFixed(2) %> KB
+                    <% } else { %>
+                      Diretório
+                    <% } %>
+                  </p>
+                </div>
+
+                <!-- Ações -->
+                <div class="d-flex align-items-center justify-content-between mt-3 pt-2 border-top border-secondary border-opacity-10">
+                  <% if (item.isFile) { %>
+                    <div class="d-flex gap-3">
+                      <a href="/shared/<%= encodeURIComponent(itemPath) %>" download class="btn btn-sm btn-link text-decoration-none text-secondary hover-text-white d-flex align-items-center gap-1 p-0 fw-semibold">
+                        <i class="bi bi-download"></i>
+                        Baixar
+                      </a>
+                      <form action="/hide/toggle" method="POST" class="m-0">
+                        <input type="hidden" name="file" value="<%= itemPath %>">
+                        <button type="submit" class="btn btn-sm btn-link text-decoration-none text-secondary hover-text-danger d-flex align-items-center gap-1 p-0 fw-semibold cursor-pointer" title="Ocultar">
+                          <i class="bi bi-eye-slash"></i>
+                          Ocultar
+                        </button>
+                      </form>
+                    </div>
+                  <% } else { %>
+                    <div class="d-flex gap-3">
+                      <a href="/explorer?path=<%= encodeURIComponent(itemPath) %>" class="btn btn-sm btn-link text-decoration-none text-gradient d-flex align-items-center gap-1 p-0 fw-bold">
+                        Abrir
+                        <i class="bi bi-arrow-right"></i>
+                      </a>
+                      <form action="/hide/toggle" method="POST" class="m-0">
+                        <input type="hidden" name="file" value="<%= itemPath %>">
+                        <button type="submit" class="btn btn-sm btn-link text-decoration-none text-secondary hover-text-danger d-flex align-items-center gap-1 p-0 fw-semibold cursor-pointer" title="Ocultar Pasta">
+                          <i class="bi bi-eye-slash"></i>
+                          Ocultar
+                        </button>
+                      </form>
+                    </div>
+                  <% } %>
+
+                  <form action="<%= item.isFile ? '/delete-file' : '/delete-dir' %>" method="POST" class="m-0">
+                    <input type="hidden" name="path" value="<%= item.path ? item.path.split('/').slice(0, -1).join('/') : currentPath %>">
+                    <input type="hidden" name="<%= item.isFile ? 'file' : 'dir' %>" value="<%= item.name %>">
+                    <button type="submit" class="btn btn-sm btn-link text-decoration-none text-danger d-flex align-items-center gap-1 p-0 fw-semibold cursor-pointer" onclick="return confirm('Tem certeza que deseja excluir <%= item.name %>?')">
+                      <i class="bi bi-trash"></i>
+                      Excluir
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        <% }); %>
+        
+      </div>
+    </div>
+
+    <!-- VISUALIZAÇÃO EM LISTA -->
+    <div id="listView" class="d-none">
+      <div class="table-responsive rounded-3 border border-secondary border-opacity-10 shadow-lg" style="background-color: rgba(15, 23, 42, 0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+        <table class="table table-premium align-middle">
+          <!-- Cabeçalho da Lista -->
+          <thead>
+            <tr>
+              <th style="width: 50px;"></th>
+              <th>Nome</th>
+              <th style="width: 150px;" class="text-end">Tamanho</th>
+              <th style="width: 150px;" class="text-end">Ações</th>
+            </tr>
+          </thead>
+
+          <!-- Itens da Lista -->
+          <tbody>
+            <% contents.forEach(item => { %>
+              <% const itemPath = item.path || (currentPath ? `${currentPath}/${item.name}` : item.name); %>
+              <tr class="table-row-premium">
+                
+                <!-- Estrela de Favoritos / Espaçador -->
+                <td>
+                  <% if (item.isFile) { %>
+                    <form action="/favorites/toggle" method="POST" class="m-0">
+                      <input type="hidden" name="file" value="<%= itemPath %>">
+                      <button type="submit" class="btn btn-link p-0 text-warning hover-scale border-0 cursor-pointer">
+                        <i class="bi <%= favorites.includes(itemPath) ? 'bi-star-fill' : 'bi-star' %> fs-5"></i>
+                      </button>
+                    </form>
+                  <% } %>
+                </td>
+
+                <!-- Nome & Ícone -->
+                <td>
+                  <% if (item.isFile) { %>
+                    <% const isVideo = item.name.match(/\.(mp4|webm|ogg|mkv|mov)$/i); %>
+                    <a href="<%= isVideo ? `/play?video=${encodeURIComponent(itemPath)}` : `/shared/${encodeURIComponent(itemPath)}` %>" 
+                       <%= isVideo ? '' : 'target="_blank"' %> 
+                       class="d-flex align-items-center gap-2.5 text-white text-opacity-90 hover-text-white text-decoration-none truncate fw-semibold">
+                      <i class="fs-5 flex-shrink-0 <%= item.name.match(/\.(jpg|jpeg|png|gif)$/i) ? 'bi bi-image text-primary-emphasis' : isVideo ? 'bi bi-film text-fuchsia-500' : item.name.match(/\.(mp3|wav|ogg|aac|flac)$/i) ? 'bi bi-music-note-beamed text-danger' : 'bi bi-file-earmark-arrow-down text-info' %>"></i>
+                      <span class="text-truncate"><%= item.name %></span>
+                    </a>
+                  <% } else { %>
+                    <a href="/explorer?path=<%= encodeURIComponent(itemPath) %>" class="d-flex align-items-center gap-2.5 text-white text-opacity-90 hover-text-white text-decoration-none truncate fw-bold">
+                      <i class="bi bi-folder2 text-warning fs-5 flex-shrink-0"></i>
+                      <span class="text-truncate"><%= item.name %></span>
+                    </a>
+                  <% } %>
+                </td>
+
+                <!-- Tamanho -->
+                <td class="text-end text-secondary small">
+                  <% if (item.isFile) { %>
+                    <%= (item.size / 1024).toFixed(2) %> KB
+                  <% } else { %>
+                    --
+                  <% } %>
+                </td>
+
+                <!-- Ações -->
+                <td>
+                  <div class="d-flex justify-content-end align-items-center gap-3">
+                    <% if (item.isFile) { %>
+                      <a href="/shared/<%= encodeURIComponent(itemPath) %>" download class="text-secondary hover-text-white transition-all-200 text-decoration-none" title="Download">
+                        <i class="bi bi-download fs-6"></i>
+                      </a>
+                      <form action="/hide/toggle" method="POST" class="m-0">
+                        <input type="hidden" name="file" value="<%= itemPath %>">
+                        <button type="submit" class="btn btn-link p-0 text-secondary hover-text-danger border-0 cursor-pointer" title="Ocultar arquivo">
+                          <i class="bi bi-eye-slash fs-6"></i>
+                        </button>
+                      </form>
+                    <% } else { %>
+                      <form action="/hide/toggle" method="POST" class="m-0">
+                        <input type="hidden" name="file" value="<%= itemPath %>">
+                        <button type="submit" class="btn btn-link p-0 text-secondary hover-text-danger border-0 cursor-pointer" title="Ocultar pasta">
+                          <i class="bi bi-eye-slash fs-6"></i>
+                        </button>
+                      </form>
+                    <% } %>
+
+                    <form action="<%= item.isFile ? '/delete-file' : '/delete-dir' %>" method="POST" class="m-0">
+                      <input type="hidden" name="path" value="<%= item.path ? item.path.split('/').slice(0, -1).join('/') : currentPath %>">
+                      <input type="hidden" name="<%= item.isFile ? 'file' : 'dir' %>" value="<%= item.name %>">
+                      <button type="submit" class="btn btn-link p-0 text-danger hover-text-danger border-0 cursor-pointer" title="Excluir" onclick="return confirm('Tem certeza que deseja excluir <%= item.name %>?')">
+                        <i class="bi bi-trash fs-6"></i>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- VISUALIZAÇÃO EM SLIDESHOW -->
+    <div id="slideshowView" class="d-none">
+      <div class="card card-premium border border-secondary border-opacity-10 shadow-lg p-4" style="background-color: rgba(15, 23, 42, 0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+        
+        <!-- Alerta se não houver mídias -->
+        <div id="slideshowEmptyAlert" class="text-center py-5 d-none">
+          <i class="bi bi-images text-secondary d-block fs-1 mb-3 opacity-50"></i>
+          <h5 class="text-white fw-bold font-outfit"><%= t('no_media_slideshow') %></h5>
+          <p class="text-secondary small"><%= t('no_media_slideshow_desc') %></p>
+        </div>
+
+        <!-- Player de Slideshow -->
+        <div id="slideshowContainer" class="d-flex flex-column align-items-center w-100">
+          
+          <!-- Informações de Status -->
+          <div class="d-flex justify-content-between align-items-center w-100 mb-3 text-secondary small">
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-fuchsia-600 font-outfit px-2.5 py-1" id="slideshowBadge"><%= t('media') %></span>
+              <span id="slideshowIndexText" class="fw-semibold">1 de 10</span>
+              <span class="text-white-50 px-1">•</span>
+              <span id="slideshowFilename" class="text-truncate" style="max-width: 300px;">nome_do_arquivo.jpg</span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+              <!-- Tempo de transição de imagens -->
+              <div class="d-flex align-items-center gap-1.5">
+                <i class="bi bi-clock-history"></i>
+                <select id="slideshowIntervalSelect" class="form-select form-select-sm bg-dark border-secondary border-opacity-20 text-light py-0.5" style="width: 80px; font-size: 11px;">
+                  <option value="3000">3s</option>
+                  <option value="5000" selected>5s</option>
+                  <option value="10000">10s</option>
+                  <option value="15000">15s</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tela de Projeção (Tela Central do Slideshow) -->
+          <div class="position-relative w-100 bg-black rounded-3 overflow-hidden d-flex align-items-center justify-content-center border border-secondary border-opacity-10 shadow-inner group" style="height: 500px;" id="slideshowProjectionArea">
+            
+            <!-- Barra de Progresso Autoplay -->
+            <div class="position-absolute top-0 start-0 bg-fuchsia-500" style="height: 4px; width: 0%; transition: width 0.1s linear; z-index: 10;" id="slideshowProgressBar"></div>
+
+            <!-- Imagem -->
+            <img id="slideshowImage" src="" class="img-fluid w-100 h-100 d-none" style="object-fit: contain;" alt="Slideshow Image">
+            
+            <!-- Vídeo -->
+            <video id="slideshowVideo" class="w-100 h-100 d-none" style="object-fit: contain;" controls playsinline></video>
+
+            <!-- Setas de navegação flutuantes (visíveis ao passar o mouse) -->
+            <button class="btn btn-dark btn-sm rounded-circle position-absolute top-50 start-0 translate-middle-y ms-3 opacity-0 group-hover:opacity-100 transition-all-200 z-3" style="width: 44px; height: 44px; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.1);" onclick="slideshowPrev()">
+              <i class="bi bi-chevron-left fs-5 text-white"></i>
+            </button>
+            <button class="btn btn-dark btn-sm rounded-circle position-absolute top-50 end-0 translate-middle-y me-3 opacity-0 group-hover:opacity-100 transition-all-200 z-3" style="width: 44px; height: 44px; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.1);" onclick="slideshowNext()">
+              <i class="bi bi-chevron-right fs-5 text-white"></i>
+            </button>
+
+          </div>
+
+          <!-- Barra de Controles Inferior -->
+          <div class="d-flex justify-content-between align-items-center w-100 mt-4 p-2.5 rounded-3 border border-secondary border-opacity-10" style="background-color: rgba(15, 23, 42, 0.25);">
+            <div class="d-flex align-items-center gap-2">
+              <button class="btn btn-sm btn-premium-secondary border-0 p-2" title="Mídia Anterior" onclick="slideshowPrev()">
+                <i class="bi bi-skip-start-fill fs-5"></i>
+              </button>
+              <button class="btn btn-sm btn-premium-primary border-0 p-2 px-3 d-flex align-items-center gap-1.5" id="slideshowPlayPauseBtn" onclick="slideshowTogglePlay()">
+                <i class="bi bi-pause-fill fs-5" id="slideshowPlayPauseIcon"></i>
+                <span id="slideshowPlayPauseText"><%= t('pause') %></span>
+              </button>
+              <button class="btn btn-sm btn-premium-secondary border-0 p-2" title="Próxima Mídia" onclick="slideshowNext()">
+                <i class="bi bi-skip-end-fill fs-5"></i>
+              </button>
+            </div>
+            
+            <div class="d-flex align-items-center gap-2">
+              <!-- Botão Tela Cheia -->
+              <button class="btn btn-sm btn-premium-secondary border-0 p-2 d-flex align-items-center gap-1.5" onclick="slideshowFullscreen()" title="Tela Cheia">
+                <i class="bi bi-fullscreen"></i>
+                <span><%= t('fullscreen') %></span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Upload (Bootstrap 5) -->
+  <div class="modal fade animate" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-content-premium border-0">
+        
+        <!-- Modal Header -->
+        <div class="modal-header modal-header-premium border-0">
+          <h5 class="modal-title font-outfit fw-bold text-white" id="uploadModalLabel">Upload de Arquivos</h5>
+          <button type="button" class="btn-close btn-close-white" onclick="toggleUploadModal()" aria-label="Close"></button>
+        </div>
+        
+        <!-- Modal Body -->
+        <div class="modal-body p-4">
+          <input type="hidden" id="currentPath" value="<%= currentPath %>">
+          
+          <!-- Drag & Drop container -->
+          <label class="d-flex flex-column align-items-center justify-content-center w-100 border border-secondary border-dashed rounded-3 cursor-pointer p-4 bg-dark bg-opacity-25 hover-bg-dark transition-all-200 select-files-box" style="height: 176px; border-style: dashed !important; border-width: 2px !important; border-color: rgba(255,255,255,0.1) !important;">
+            <div class="d-flex flex-column align-items-center justify-content-center text-center">
+              <i class="bi bi-cloud-arrow-up text-secondary fs-1 mb-2 upload-icon"></i>
+              <p class="mb-1 text-light fw-bold small">Clique para selecionar arquivos</p>
+              <p class="text-secondary small mb-0" style="font-size: 11px;">Qualquer arquivo de mídia é suportado</p>
+            </div>
+            <input type="file" id="fileInput" class="d-none" multiple>
+          </label>
+
+          <!-- Arquivos Selecionados Info -->
+          <div id="selectedFilesInfo" class="small text-secondary mt-3 p-3 rounded bg-dark bg-opacity-50 border border-secondary border-opacity-10 d-none" style="max-height: 110px; overflow-y: auto;"></div>
+        </div>
+        
+        <!-- Modal Footer -->
+        <div class="modal-footer modal-footer-premium border-0">
+          <button type="button" class="btn btn-premium-secondary" onclick="toggleUploadModal()">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-premium-primary border-0" id="uploadFilesBtn">
+            Enviar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS assets -->
+  <script src="/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/sweetalert2.all.min.js"></script>
+  <script src="/js/lightbox-plus-jquery.min.js"></script>
+  <script src="/js/scripts.js"></script>
+
+  <script>
+    const listBtn = document.getElementById('listViewBtn');
+    const gridBtn = document.getElementById('gridViewBtn');
+    const listView = document.getElementById('listView');
+    const gridView = document.getElementById('gridView');
+
+    // Monitoramento do Input de Upload
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+      const info = document.getElementById('selectedFilesInfo');
+      if (this.files && this.files.length > 0) {
+        info.classList.remove('d-none');
+        info.innerHTML = `<strong>Selecionados (${this.files.length}):</strong><ul class="list-unstyled mt-1 mb-0">${Array.from(this.files).map(f => `<li class="text-truncate" style="font-size: 11px;">• ${f.name}</li>`).join('')}</ul>`;
+      } else {
+        info.classList.add('d-none');
+        info.innerHTML = '';
+      }
+    });
+
+    // Coleção de arquivos de imagem e vídeo do EJS para o Slideshow
+    const rawItems = [
+      <% contents.forEach(item => { %>
+        <% const itemPath = item.path || (currentPath ? `${currentPath}/${item.name}` : item.name); %>
+        <% const isImage = item.isFile && item.name.match(/\.(jpg|jpeg|png|gif)$/i); %>
+        <% const isVideo = item.isFile && item.name.match(/\.(mp4|webm|ogg|mkv|mov)$/i); %>
+        <% if (isImage || isVideo) { %>
+          {
+            name: "<%= item.name.replace(/"/g, '\\"') %>",
+            path: "/shared/<%= encodeURIComponent(itemPath) %>",
+            isFile: <%= item.isFile %>,
+            isImage: <%= !!isImage %>,
+            isVideo: <%= !!isVideo %>
+          },
+        <% } %>
+      <% }); %>
+    ];
+
+    const slideshowBtn = document.getElementById('slideshowViewBtn');
+    const slideshowView = document.getElementById('slideshowView');
+    const slideshowEmptyAlert = document.getElementById('slideshowEmptyAlert');
+    const slideshowContainer = document.getElementById('slideshowContainer');
+    const slideshowImage = document.getElementById('slideshowImage');
+    const slideshowVideo = document.getElementById('slideshowVideo');
+    const slideshowIndexText = document.getElementById('slideshowIndexText');
+    const slideshowFilename = document.getElementById('slideshowFilename');
+    const slideshowBadge = document.getElementById('slideshowBadge');
+    const slideshowPlayPauseIcon = document.getElementById('slideshowPlayPauseIcon');
+    const slideshowPlayPauseText = document.getElementById('slideshowPlayPauseText');
+    const slideshowIntervalSelect = document.getElementById('slideshowIntervalSelect');
+    const slideshowProgressBar = document.getElementById('slideshowProgressBar');
+    const slideshowProjectionArea = document.getElementById('slideshowProjectionArea');
+
+    let slideshowItems = rawItems;
+    let slideshowIndex = 0;
+    let slideshowTimer = null;
+    let slideshowProgressInterval = null;
+    let slideshowIsPlaying = true;
+    let slideshowDuration = 5000;
+    const slideshowProgressStep = 100;
+
+    function deactivateAllViewBtns() {
+      if (listBtn) {
+        listBtn.classList.remove('btn-premium-primary');
+        listBtn.classList.add('btn-premium-secondary');
+      }
+      if (gridBtn) {
+        gridBtn.classList.remove('btn-premium-primary');
+        gridBtn.classList.add('btn-premium-secondary');
+      }
+      if (slideshowBtn) {
+        slideshowBtn.classList.remove('btn-premium-primary');
+        slideshowBtn.classList.add('btn-premium-secondary');
+      }
+    }
+
+    function showListView() {
+      listView.classList.remove('d-none');
+      gridView.classList.add('d-none');
+      slideshowView.classList.add('d-none');
+      
+      deactivateAllViewBtns();
+      if (listBtn) {
+        listBtn.classList.add('btn-premium-primary');
+        listBtn.classList.remove('btn-premium-secondary');
+      }
+      localStorage.setItem('viewMode', 'list');
+      stopSlideshow();
+    }
+
+    function showGridView() {
+      gridView.classList.remove('d-none');
+      listView.classList.add('d-none');
+      slideshowView.classList.add('d-none');
+      
+      deactivateAllViewBtns();
+      if (gridBtn) {
+        gridBtn.classList.add('btn-premium-primary');
+        gridBtn.classList.remove('btn-premium-secondary');
+      }
+      localStorage.setItem('viewMode', 'grid');
+      stopSlideshow();
+    }
+
+    function showSlideshowView() {
+      slideshowView.classList.remove('d-none');
+      listView.classList.add('d-none');
+      gridView.classList.add('d-none');
+      
+      deactivateAllViewBtns();
+      if (slideshowBtn) {
+        slideshowBtn.classList.add('btn-premium-primary');
+        slideshowBtn.classList.remove('btn-premium-secondary');
+      }
+      localStorage.setItem('viewMode', 'slideshow');
+      startSlideshow();
+    }
+
+    if (listBtn && gridBtn) {
+      listBtn.addEventListener('click', showListView);
+      gridBtn.addEventListener('click', showGridView);
+    }
+    if (slideshowBtn) {
+      slideshowBtn.addEventListener('click', showSlideshowView);
+    }
+
+    // Controle do Slideshow
+    function startSlideshow() {
+      if (slideshowItems.length === 0) {
+        slideshowEmptyAlert.classList.remove('d-none');
+        slideshowContainer.classList.add('d-none');
+        return;
+      }
+      slideshowEmptyAlert.classList.add('d-none');
+      slideshowContainer.classList.remove('d-none');
+      
+      slideshowIndex = 0;
+      slideshowIsPlaying = true;
+      updatePlayPauseButton();
+      showSlide(slideshowIndex);
+    }
+
+    function stopSlideshow() {
+      clearSlideshowTimers();
+      if (slideshowVideo) {
+        slideshowVideo.pause();
+        slideshowVideo.src = "";
+      }
+    }
+
+    function clearSlideshowTimers() {
+      if (slideshowTimer) {
+        clearTimeout(slideshowTimer);
+        slideshowTimer = null;
+      }
+      if (slideshowProgressInterval) {
+        clearInterval(slideshowProgressInterval);
+        slideshowProgressInterval = null;
+      }
+      if (slideshowProgressBar) {
+        slideshowProgressBar.style.width = '0%';
+      }
+    }
+
+    function showSlide(index) {
+      clearSlideshowTimers();
+      
+      if (index < 0) {
+        slideshowIndex = slideshowItems.length - 1;
+      } else if (index >= slideshowItems.length) {
+        slideshowIndex = 0;
+      } else {
+        slideshowIndex = index;
+      }
+      
+      const item = slideshowItems[slideshowIndex];
+      slideshowIndexText.textContent = `${slideshowIndex + 1} de ${slideshowItems.length}`;
+      slideshowFilename.textContent = item.name;
+      slideshowFilename.title = item.name;
+      
+      if (item.isImage) {
+        slideshowBadge.textContent = '<%= t("image") %>';
+        slideshowBadge.className = 'badge bg-primary font-outfit px-2.5 py-1';
+        
+        slideshowVideo.classList.add('d-none');
+        slideshowVideo.pause();
+        slideshowVideo.src = "";
+        
+        slideshowImage.src = item.path;
+        slideshowImage.classList.remove('d-none');
+        
+        if (slideshowIsPlaying) {
+          startImageTimer();
+        }
+      } else if (item.isVideo) {
+        slideshowBadge.textContent = '<%= t("video_label") %>';
+        slideshowBadge.className = 'badge bg-fuchsia-600 font-outfit px-2.5 py-1';
+        
+        slideshowImage.classList.add('d-none');
+        slideshowImage.src = "";
+        
+        slideshowVideo.src = item.path;
+        slideshowVideo.classList.remove('d-none');
+        slideshowVideo.load();
+        
+        if (slideshowIsPlaying) {
+          slideshowVideo.play().catch(err => console.log('Video play blocked:', err));
+        } else {
+          slideshowVideo.pause();
+        }
+      }
+    }
+
+    function startImageTimer() {
+      clearSlideshowTimers();
+      let elapsed = 0;
+      if (slideshowProgressBar) slideshowProgressBar.style.width = '0%';
+      
+      slideshowProgressInterval = setInterval(() => {
+        elapsed += slideshowProgressStep;
+        const pct = Math.min((elapsed / slideshowDuration) * 100, 100);
+        if (slideshowProgressBar) slideshowProgressBar.style.width = `${pct}%`;
+        
+        if (elapsed >= slideshowDuration) {
+          clearInterval(slideshowProgressInterval);
+          slideshowProgressInterval = null;
+          slideshowNext();
+        }
+      }, slideshowProgressStep);
+    }
+
+    if (slideshowVideo) {
+      slideshowVideo.addEventListener('timeupdate', () => {
+        const item = slideshowItems[slideshowIndex];
+        if (item && item.isVideo && slideshowVideo.duration) {
+          const pct = (slideshowVideo.currentTime / slideshowVideo.duration) * 100;
+          if (slideshowProgressBar) slideshowProgressBar.style.width = `${pct}%`;
+        }
+      });
+      
+      slideshowVideo.addEventListener('ended', () => {
+        const item = slideshowItems[slideshowIndex];
+        if (item && item.isVideo) {
+          slideshowNext();
+        }
+      });
+    }
+
+    function slideshowNext() {
+      showSlide(slideshowIndex + 1);
+    }
+
+    function slideshowPrev() {
+      showSlide(slideshowIndex - 1);
+    }
+
+    function slideshowTogglePlay() {
+      slideshowIsPlaying = !slideshowIsPlaying;
+      updatePlayPauseButton();
+      
+      const item = slideshowItems[slideshowIndex];
+      if (item) {
+        if (slideshowIsPlaying) {
+          if (item.isImage) {
+            startImageTimer();
+          } else if (item.isVideo) {
+            slideshowVideo.play().catch(err => console.log(err));
+          }
+        } else {
+          clearSlideshowTimers();
+          if (item.isVideo) {
+            slideshowVideo.pause();
+          }
+        }
+      }
+    }
+
+    // Atalhos do teclado para navegação no slideshow
+    document.addEventListener('keydown', (e) => {
+      // Apenas se a visualização do slideshow estiver ativa
+      if (slideshowView && !slideshowView.classList.contains('d-none')) {
+        if (e.key === 'ArrowRight') {
+          slideshowNext();
+        } else if (e.key === 'ArrowLeft') {
+          slideshowPrev();
+        } else if (e.key === ' ' || e.key === 'Spacebar') {
+          e.preventDefault();
+          slideshowTogglePlay();
+        } else if (e.key === 'f' || e.key === 'F') {
+          slideshowFullscreen();
+        }
+      }
+    });
+
+    function updatePlayPauseButton() {
+      if (slideshowIsPlaying) {
+        slideshowPlayPauseIcon.className = 'bi bi-pause-fill fs-5';
+        slideshowPlayPauseText.textContent = '<%= t("pause") %>';
+      } else {
+        slideshowPlayPauseIcon.className = 'bi bi-play-fill fs-5';
+        slideshowPlayPauseText.textContent = '<%= t("play") %>';
+      }
+    }
+
+    if (slideshowIntervalSelect) {
+      slideshowIntervalSelect.addEventListener('change', (e) => {
+        slideshowDuration = parseInt(e.target.value);
+        const item = slideshowItems[slideshowIndex];
+        if (slideshowIsPlaying && item && item.isImage) {
+          startImageTimer();
+        }
+      });
+    }
+
+    function slideshowFullscreen() {
+      const el = slideshowProjectionArea;
+      if (el) {
+        if (el.requestFullscreen) {
+          el.requestFullscreen();
+        } else if (el.webkitRequestFullscreen) {
+          el.webkitRequestFullscreen();
+        } else if (el.msRequestFullscreen) {
+          el.msRequestFullscreen();
+        }
+      }
+    }
+
+    // Configuração inicial com base nas pastas padrão ou no localStorage
+    const savedView = localStorage.getItem('viewMode');
+    
+    <% if (currentPath && (currentPath.endsWith('/wallpapers') || currentPath.endsWith('/photos'))) { %>
+      showGridView();
+    <% } else { %>
+      if (savedView === 'grid') {
+        showGridView();
+      } else if (savedView === 'slideshow') {
+        showSlideshowView();
+      } else {
+        showListView();
+      }
+    <% } %>
+  </script>
+
+  <style>
+    .hover-scale:hover {
+      transform: scale(1.1);
+    }
+    .group-play:hover .play-overlay {
+      opacity: 1 !important;
+    }
+    .group-play:hover .icon-film {
+      color: #7c3aed !important;
+    }
+    .select-files-box:hover .upload-icon {
+      color: #7c3aed !important;
+    }
+    .select-files-box:hover {
+      border-color: rgba(124, 58, 237, 0.4) !important;
+      background-color: rgba(15, 23, 42, 0.4) !important;
+    }
+    #slideshowProjectionArea:hover .opacity-0 {
+      opacity: 1 !important;
+    }
+  </style>
+
+</body>
+</html>

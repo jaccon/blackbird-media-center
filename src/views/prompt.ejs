@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terminal Prompt - Black Bird Media Center</title>
+  <style>
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+    .cursor {
+      animation: blink 1s step-end infinite;
+    }
+  </style>
+</head>
+<body class="bg-dark text-light min-vh-screen">
+
+  <%- include('header') %>
+
+  <!-- Modal de Upload (Necessário por estar no header.ejs) (Bootstrap 5) -->
+  <div class="modal fade animate" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-content-premium border-0">
+        <!-- Modal Header -->
+        <div class="modal-header modal-header-premium border-0">
+          <h5 class="modal-title font-outfit fw-bold text-white" id="uploadModalLabel">Upload de Arquivos</h5>
+          <button type="button" class="btn-close btn-close-white" onclick="toggleUploadModal()" aria-label="Close"></button>
+        </div>
+        <!-- Modal Body -->
+        <div class="modal-body p-4">
+          <input type="hidden" id="currentPath" value="">
+          <label class="d-flex flex-column align-items-center justify-content-center w-100 border border-secondary border-dashed rounded-3 cursor-pointer p-4 bg-dark bg-opacity-25 hover-bg-dark transition-all-200 select-files-box" style="height: 176px; border-style: dashed !important; border-width: 2px !important; border-color: rgba(255,255,255,0.1) !important;">
+            <div class="d-flex flex-column align-items-center justify-content-center text-center">
+              <i class="bi bi-cloud-arrow-up text-secondary fs-1 mb-2 upload-icon"></i>
+              <p class="mb-1 text-light fw-bold small">Selecione arquivos para upload</p>
+              <p class="text-secondary small mb-0" style="font-size: 11px;">Mídia enviada ficará disponível na raiz</p>
+            </div>
+            <input type="file" id="fileInput" class="d-none" multiple>
+          </label>
+          <div id="selectedFilesInfo" class="small text-secondary mt-3 p-3 rounded bg-dark bg-opacity-50 border border-secondary border-opacity-10 d-none" style="max-height: 110px; overflow-y: auto;"></div>
+        </div>
+        <!-- Modal Footer -->
+        <div class="modal-footer modal-footer-premium border-0">
+          <button type="button" class="btn btn-premium-secondary" onclick="toggleUploadModal()">Cancelar</button>
+          <button type="button" class="btn btn-premium-primary border-0" id="uploadFilesBtn">Enviar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-xl py-4 px-3" style="max-width: 768px;">
+    
+    <!-- Cabeçalho -->
+    <div class="mb-4">
+      <h2 class="fs-4 fw-bold text-white font-outfit m-0">Console Terminal</h2>
+      <p class="text-secondary small m-0 mt-1">Interaja diretamente com o sistema operacional do Black Bird Media Center</p>
+    </div>
+
+    <!-- Terminal Container -->
+    <div class="w-100 bg-black border border-secondary border-opacity-10 rounded-3 overflow-hidden shadow-lg font-mono text-success" style="font-size: 13.5px; line-height: 1.6;">
+      
+      <!-- Barra Superior do Terminal -->
+      <div class="w-100 bg-dark bg-opacity-75 border-bottom border-secondary border-opacity-10 px-3 py-2.5 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-1.5">
+          <span class="rounded-circle bg-danger bg-opacity-75" style="width: 10px; height: 10px; display: inline-block;"></span>
+          <span class="rounded-circle bg-warning bg-opacity-75" style="width: 10px; height: 10px; display: inline-block;"></span>
+          <span class="rounded-circle bg-success bg-opacity-75" style="width: 10px; height: 10px; display: inline-block;"></span>
+        </div>
+        <span class="small font-outfit fw-bold text-secondary text-uppercase tracking-wider" style="font-size: 10px;">blackbird@mediacenter - bash</span>
+        <div style="width: 44px;"></div>
+      </div>
+
+      <!-- Corpo do Terminal -->
+      <div class="p-4 overflow-y-auto d-flex flex-column justify-content-between" id="terminalBody" style="height: 380px; background-color: #020617;">
+        
+        <!-- Histórico e logs de inicialização -->
+        <div>
+          <!-- Banner de Inicialização -->
+          <div class="text-secondary small mb-3">
+            <div>Black Bird OS v1.0.0 (GNU/Linux 5.15.0-x86_64)</div>
+            <div>* Status: Ativo e pronto para conexões externas</div>
+            <div>* Digite 'ajuda' para listar os comandos integrados disponíveis.</div>
+            <div class="mt-2 text-secondary text-opacity-50">--------------------------------------------------</div>
+          </div>
+
+          <!-- Histórico Dinâmico -->
+          <div class="d-flex flex-column gap-3">
+            <% history.forEach(item => { %>
+              <div class="d-flex flex-column gap-1">
+                <div class="d-flex align-items-center text-white text-opacity-75">
+                  <span class="text-primary-emphasis fw-bold me-2">blackbird@mediacenter:~$</span>
+                  <span><%= item.command %></span>
+                </div>
+                <div class="text-success text-opacity-95 ps-3 whitespace-pre-wrap"><%= item.response %></div>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+
+        <!-- Input de Comando Atual -->
+        <form action="/prompt" method="POST" class="mt-4 border-top border-secondary border-opacity-10 pt-3 d-flex align-items-center gap-2 m-0">
+          <span class="text-primary-emphasis fw-bold flex-shrink-0">blackbird@mediacenter:~$</span>
+          
+          <input type="text" name="command" id="cmdInput" autocomplete="off" autofocus required
+                 placeholder="Digite um comando..."
+                 class="flex-grow-1 bg-transparent border-0 outline-none text-white p-0 fs-6 shadow-none" style="border: 0 !important; box-shadow: none !important;">
+          
+          <span class="cursor bg-success flex-shrink-0" style="width: 6px; height: 16px;"></span>
+          
+          <button type="submit" class="d-none">Enviar</button>
+        </form>
+
+      </div>
+    </div>
+
+    <!-- Seção de Shortcuts / Sugestões rápidas -->
+    <div class="mt-4 p-3 bg-dark bg-opacity-25 border border-secondary border-opacity-10 rounded-3">
+      <h4 class="text-uppercase text-secondary fw-semibold tracking-wider mb-3 font-outfit" style="font-size: 11px;">Atalhos rápidos</h4>
+      <div class="d-flex flex-wrap gap-2">
+        <button onclick="runShortcut('ajuda')" class="btn btn-sm btn-premium-secondary d-flex align-items-center gap-1.5 py-1.5 px-3">
+          <i class="bi bi-question-circle text-primary-emphasis"></i>
+          <span>ajuda</span>
+        </button>
+        <button onclick="runShortcut('listar')" class="btn btn-sm btn-premium-secondary d-flex align-items-center gap-1.5 py-1.5 px-3">
+          <i class="bi bi-folder2 text-warning"></i>
+          <span>listar</span>
+        </button>
+        <button onclick="runShortcut('status')" class="btn btn-sm btn-premium-secondary d-flex align-items-center gap-1.5 py-1.5 px-3">
+          <i class="bi bi-activity text-success"></i>
+          <span>status</span>
+        </button>
+        <button onclick="runShortcut('marca')" class="btn btn-sm btn-premium-secondary d-flex align-items-center gap-1.5 py-1.5 px-3">
+          <i class="bi bi-tag text-info"></i>
+          <span>marca</span>
+        </button>
+        <button onclick="runShortcut('change password')" class="btn btn-sm btn-premium-secondary d-flex align-items-center gap-1.5 py-1.5 px-3">
+          <i class="bi bi-shield-lock text-danger"></i>
+          <span>change password</span>
+        </button>
+        <button onclick="runShortcut('limpar')" class="btn btn-sm btn-premium-secondary d-flex align-items-center gap-1.5 py-1.5 px-3">
+          <i class="bi bi-trash text-danger"></i>
+          <span>limpar</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- JS assets -->
+  <script src="/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/sweetalert2.all.min.js"></script>
+  <script src="/js/scripts.js"></script>
+
+  <script>
+    // Autofocus no input de comandos
+    const input = document.getElementById('cmdInput');
+    const termBody = document.getElementById('terminalBody');
+
+    // Mantém o scroll no final do terminal ao carregar
+    window.addEventListener('DOMContentLoaded', () => {
+      termBody.scrollTop = termBody.scrollHeight;
+      if (input) input.focus();
+    });
+
+    // Clicar em qualquer parte do terminal foca no input
+    document.getElementById('terminalBody').addEventListener('click', () => {
+      if (input) input.focus();
+    });
+
+    // Executa atalhos rápidos inserindo o valor e enviando o form
+    function runShortcut(cmd) {
+      if (input) {
+        input.value = cmd;
+        input.form.submit();
+      }
+    }
+
+    // Monitoramento do Input de Upload (para compatibilidade com header)
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput) {
+      fileInput.addEventListener('change', function(e) {
+        const info = document.getElementById('selectedFilesInfo');
+        if (this.files && this.files.length > 0) {
+          info.classList.remove('d-none');
+          info.innerHTML = `<strong>Selecionados (${this.files.length}):</strong><ul class="list-unstyled mt-1 mb-0">${Array.from(this.files).map(f => `<li class="text-truncate" style="font-size: 11px;">• ${f.name}</li>`).join('')}</ul>`;
+        } else {
+          info.classList.add('d-none');
+          info.innerHTML = '';
+        }
+      });
+    }
+  </script>
+
+  <style>
+    .select-files-box:hover .upload-icon {
+      color: #7c3aed !important;
+    }
+    .select-files-box:hover {
+      border-color: rgba(124, 58, 237, 0.4) !important;
+      background-color: rgba(15, 23, 42, 0.4) !important;
+    }
+  </style>
+
+</body>
+</html>

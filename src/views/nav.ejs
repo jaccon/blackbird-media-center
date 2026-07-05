@@ -1,0 +1,58 @@
+<div class="d-flex flex-col flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-4 p-3 glass-panel rounded-3">
+  
+  <!-- Breadcrumb (Alinhado à Esquerda) -->
+  <nav aria-label="breadcrumb" class="m-0">
+    <ol class="breadcrumb m-0 align-items-center" style="--bs-breadcrumb-divider: '/'; --bs-breadcrumb-divider-color: rgba(255,255,255,0.15);">
+      <% if (typeof search !== 'undefined' && search) { %>
+        <li class="breadcrumb-item d-flex align-items-center active text-white" aria-current="page">
+          <i class="bi bi-search me-2 text-gradient fs-6"></i>
+          <span class="fw-semibold font-outfit">Resultados da Busca</span>
+        </li>
+      <% } else { %>
+        <li class="breadcrumb-item d-flex align-items-center">
+          <a href="/explorer" class="d-flex align-items-center text-white text-opacity-75 hover-text-white text-decoration-none transition-all-200">
+            <i class="bi bi-folder2-open me-2 text-warning fs-5"></i>
+            <span>Raiz</span>
+          </a>
+        </li>
+        <% if (currentPath) { %>
+          <% currentPath.split('/').forEach((part, index) => { %>
+            <% if (part) { %>
+              <li class="breadcrumb-item d-flex align-items-center text-white text-opacity-75">
+                <a href="/explorer?path=<%= currentPath.split('/').slice(0, index + 1).join('/') %>" class="text-white text-opacity-75 hover-text-white text-decoration-none transition-all-200">
+                  <%= part %>
+                </a>
+              </li>
+            <% } %>
+          <% }); %>
+        <% } %>
+      <% } %>
+    </ol>
+  </nav>
+
+  <!-- Botões de Alternância de Visualização (Alinhado à Direita) -->
+  <div class="btn-group bg-dark bg-opacity-50 border border-secondary border-opacity-10 p-1 rounded-3" role="group" aria-label="View Toggle">
+    <button id="listViewBtn" type="button" class="btn btn-sm btn-premium-secondary border-0 d-flex align-items-center gap-1.5 py-1.5 px-3">
+      <i class="bi bi-list fs-6"></i>
+      <span>Lista</span>
+    </button>
+    <button id="gridViewBtn" type="button" class="btn btn-sm btn-premium-secondary border-0 d-flex align-items-center gap-1.5 py-1.5 px-3">
+      <i class="bi bi-grid-3x3-gap-fill fs-6"></i>
+      <span>Grade</span>
+    </button>
+    <button id="slideshowViewBtn" type="button" class="btn btn-sm btn-premium-secondary border-0 d-flex align-items-center gap-1.5 py-1.5 px-3">
+      <i class="bi bi-play-btn-fill fs-6"></i>
+      <span>Slideshow</span>
+    </button>
+  </div>
+
+</div>
+
+<style>
+  .breadcrumb-item + .breadcrumb-item::before {
+    color: rgba(255, 255, 255, 0.25) !important;
+  }
+  .hover-text-white:hover {
+    color: #fff !important;
+  }
+</style>

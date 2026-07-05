@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Black Bird Media Center</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/bootstrap-icons.css">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="bg-dark text-light min-vh-screen d-flex align-items-center justify-content-center" style="background-image: radial-gradient(circle at top right, rgba(124, 58, 237, 0.08), transparent 40%), radial-gradient(circle at bottom left, rgba(244, 63, 94, 0.05), transparent 40%);">
+
+  <div class="p-4 p-sm-5 rounded-4 border border-secondary border-opacity-10 text-center shadow-2xl" style="background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); max-width: 440px; width: 100%; margin: 15px;">
+    
+    <!-- Logotipo Black Bird -->
+    <div class="d-flex align-items-center justify-content-center gap-3 mb-4">
+      <img src="/images/logo.svg" class="object-contain" style="width: 48px; height: 48px;" alt="Logo">
+      <div class="d-flex flex-column text-start">
+        <span class="fs-4 fw-bold tracking-tight text-white leading-none font-outfit m-0">
+          Black <span class="text-gradient">Bird</span>
+        </span>
+        <span class="text-uppercase text-secondary fw-semibold tracking-widest m-0" style="font-size: 11px; margin-top: 2px !important;">Media Center</span>
+      </div>
+    </div>
+
+    <h3 class="fs-5 fw-bold text-white font-outfit mb-2"><%= t('login_title') %></h3>
+    <p class="text-secondary small mb-4"><%= t('login_desc') %></p>
+    
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger py-2.5 px-3 small border-0 mb-4 text-start d-flex align-items-center gap-2" style="background-color: rgba(220,53,69,0.1); color: #ea868f;">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span><%= t(error) %></span>
+      </div>
+    <% } %>
+
+    <form action="/login/auth" method="POST" class="text-start">
+      <div class="mb-4">
+        <label for="password" class="form-label text-secondary small fw-semibold text-uppercase tracking-wider mb-2"><%= t('login_password') %></label>
+        <div class="position-relative">
+          <input type="password" id="password" name="password" placeholder="••••••••" required class="form-control input-premium text-center pe-5" style="letter-spacing: 0.125em;">
+          <button type="button" onclick="togglePasswordVisibility()" class="btn btn-link position-absolute end-0 top-50 translate-y-middle text-secondary hover-text-white border-0 py-0 px-3" style="margin-top: -20px;">
+            <i class="bi bi-eye-slash" id="togglePasswordIcon"></i>
+          </button>
+        </div>
+      </div>
+      
+      <button type="submit" class="btn btn-premium-primary w-100 border-0 py-2.5 fw-semibold tracking-wide font-outfit shadow-sm"><%= t('sign_in') %></button>
+    </form>
+  </div>
+
+  <script>
+    function togglePasswordVisibility() {
+      const passwordInput = document.getElementById('password');
+      const icon = document.getElementById('togglePasswordIcon');
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.classList.remove('bi-eye-slash');
+        icon.classList.add('bi-eye');
+      } else {
+        passwordInput.type = 'password';
+        icon.classList.remove('bi-eye');
+        icon.classList.add('bi-eye-slash');
+      }
+    }
+  </script>
+
+  <style>
+    .translate-y-middle {
+      transform: translateY(-50%);
+    }
+    .shadow-2xl {
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+  </style>
+</body>
+</html>

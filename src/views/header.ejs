@@ -1,0 +1,475 @@
+<!-- Local stylesheets & script assets (Offline-capable & TV compatible) -->
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+  href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap"
+  rel="stylesheet">
+<link rel="stylesheet" href="/css/bootstrap-icons.css">
+<link rel="stylesheet" href="/css/styles.css">
+<script src="/js/qrcode.min.js"></script>
+
+<!-- Header Principal -->
+<header class="w-100 border-bottom border-secondary border-opacity-10 bg-dark bg-opacity-75 sticky-top z-3"
+  style="backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); height: 80px;">
+  <div class="container-xl h-100 d-flex align-items-center justify-content-between px-3">
+
+    <!-- Logotipo Black Bird -->
+    <a href="/" class="d-flex align-items-center gap-3 text-decoration-none group">
+      <div class="d-flex align-items-center justify-content-center">
+        <!-- Bird SVG Logo -->
+        <img src="/images/logo.svg" class="object-contain transition-all-200" style="width: 36px; height: 36px;"
+          alt="Logo">
+      </div>
+      <div class="d-flex flex-column">
+        <span class="fs-5 fw-bold tracking-tight text-white leading-none font-outfit m-0">
+          Black <span class="text-gradient">Bird</span>
+        </span>
+        <span class="text-uppercase text-secondary fw-semibold tracking-widest m-0"
+          style="font-size: 10px; margin-top: 2px !important;">Media Center</span>
+      </div>
+    </a>
+
+    <!-- Botões de Ação e QR Code -->
+    <div class="d-flex align-items-center gap-3">
+      <!-- Botões de Ação -->
+      <div class="d-flex align-items-center gap-2">
+        <button onclick="toggleUploadModal()" class="btn btn-premium-primary d-flex align-items-center gap-2 border-0">
+          <i class="bi bi-cloud-arrow-up fs-6"></i>
+          <span class="d-none d-sm-inline"><%= t('upload_files') %></span>
+        </button>
+        <button onclick="toggleCreateFolderModal()" class="btn btn-premium-secondary d-flex align-items-center gap-2">
+          <i class="bi bi-folder-plus fs-6 text-secondary"></i>
+          <span class="d-none d-sm-inline"><%= t('create_folder') %></span>
+        </button>
+      </div>
+
+      <!-- Divisor -->
+      <div class="vr bg-secondary opacity-25" style="height: 32px;"></div>
+
+      <!-- Container do QR Code -->
+      <div class="position-relative group">
+        <div id="qrcode"
+          class="p-1 bg-dark bg-opacity-50 border border-secondary border-opacity-10 rounded cursor-pointer"
+          style="width: 44px; height: 44px; overflow: hidden;"></div>
+      </div>
+    </div>
+
+  </div>
+</header>
+
+<!-- Submenu / Navegação de Seções -->
+<nav class="w-100 bg-dark bg-opacity-25 border-bottom border-secondary border-opacity-10 py-2">
+  <div class="container-xl d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-3 px-3">
+    <!-- Links Principais -->
+    <div class="d-flex flex-wrap align-items-center gap-1">
+      <a href="/dashboard" class="nav-link-premium text-decoration-none" style="font-size: 13px;">
+        <i class="bi bi-speedometer2 text-info"></i>
+        <span><%= t('dashboard') %></span>
+      </a>
+      <a href="/videos" class="nav-link-premium text-decoration-none">
+        <i class="bi bi-film text-fuchsia-500"></i>
+        <span><%= t('videos') %></span>
+      </a>
+      <a href="/photos" class="nav-link-premium text-decoration-none">
+        <i class="bi bi-image text-primary-emphasis"></i>
+        <span><%= t('photos') %></span>
+      </a>
+      <a href="/music" class="nav-link-premium text-decoration-none">
+        <i class="bi bi-music-note-beamed text-danger"></i>
+        <span><%= t('music') %></span>
+      </a>
+      <a href="/explorer" class="nav-link-premium text-decoration-none">
+        <i class="bi bi-folder2-open text-warning"></i>
+        <span><%= t('explorer') %></span>
+      </a>
+
+      <!-- Divisor Vertical -->
+      <div class="vr bg-secondary opacity-25 mx-2 d-none d-sm-block" style="height: 20px;"></div>
+
+      <a href="/cameras" class="nav-link-premium text-decoration-none" style="font-size: 13px;">
+        <i class="bi bi-camera-video text-secondary"></i>
+        <span><%= t('cameras') %></span>
+      </a>
+      <a href="/favorites" class="nav-link-premium text-decoration-none" style="font-size: 13px;">
+        <i class="bi bi-star text-warning"></i>
+        <span><%= t('favorites') %></span>
+      </a>
+
+      <a href="/settings" class="nav-link-premium text-decoration-none" style="font-size: 13px;">
+        <i class="bi bi-gear text-info"></i>
+        <span><%= t('settings') %></span>
+      </a>
+      <a href="/remote" class="nav-link-premium text-decoration-none" style="font-size: 13px;">
+        <i class="bi bi-controller text-gradient"></i>
+        <span><%= t('remote_control') %></span>
+      </a>
+      <% if (typeof config !== 'undefined' && config.authEnabled) { %>
+        <a href="/logout" class="nav-link-premium text-decoration-none ms-md-auto text-danger hover-text-danger" style="font-size: 13px;">
+          <i class="bi bi-box-arrow-right text-danger"></i>
+          <span><%= t('logout') %></span>
+        </a>
+      <% } %>
+
+    </div>
+
+    <!-- Barra de Pesquisa Global -->
+    <form action="/explorer" method="GET" class="position-relative m-0" style="min-width: 250px;">
+      <input type="text" name="search" placeholder="<%= t('search_placeholder') %>"
+        value="<%= typeof search !== 'undefined' ? search : '' %>" class="form-control input-premium w-100"
+        style="padding-left: 2.5rem !important;">
+      <i class="bi bi-search position-absolute text-secondary"
+        style="left: 16px; top: 50%; transform: translateY(-50%); font-size: 13px;"></i>
+    </form>
+  </div>
+</nav>
+
+<!-- Modal Criar Pasta (Bootstrap 5) -->
+<div class="modal fade animate" id="createFolderModal" tabindex="-1" aria-labelledby="createFolderModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-content-premium">
+
+      <!-- Modal Header -->
+      <div class="modal-header modal-header-premium border-0">
+        <h5 class="modal-title font-outfit fw-bold text-white" id="createFolderModalLabel"><%= t('create_folder') %></h5>
+        <button type="button" class="btn-close btn-close-white" onclick="toggleCreateFolderModal()"
+          aria-label="Close"></button>
+      </div>
+
+      <!-- Modal Form -->
+      <form action="/create-dir" method="POST" class="m-0">
+        <div class="modal-body p-4">
+          <input type="hidden" name="path" id="createFolderPathInput" value="">
+
+          <div class="mb-3">
+            <label for="dirNameInput"
+              class="form-label text-uppercase text-secondary fw-semibold small tracking-wider mb-2"><%= t('folder_name') %></label>
+            <input type="text" id="dirNameInput" name="dirName" placeholder="Ex: Filmes de Ação" required
+              class="form-control input-premium">
+          </div>
+
+          <div class="form-check form-switch mt-3 d-flex align-items-center gap-2">
+            <input class="form-check-input cursor-pointer" type="checkbox" role="switch" name="isHidden" id="createDirIsHidden" value="true">
+            <label class="form-check-label text-secondary small cursor-pointer" for="createDirIsHidden">
+              <%= t('hidden_folder_opt') %>
+            </label>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="modal-footer modal-footer-premium border-0">
+          <button type="button" class="btn btn-premium-secondary" onclick="toggleCreateFolderModal()"><%= t('cancel') %></button>
+          <button type="submit" class="btn btn-premium-primary border-0"><%= t('create') %></button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Gerar ou recuperar playerId da aba do navegador para pareamento isolado
+  let playerId = sessionStorage.getItem('bb_player_id');
+  if (!playerId) {
+    playerId = Math.random().toString(36).substring(2, 10);
+    sessionStorage.setItem('bb_player_id', playerId);
+  }
+
+  // Inicialização do QR code
+  window.addEventListener('DOMContentLoaded', () => {
+    const qrContainer = document.getElementById("qrcode");
+    if (qrContainer) {
+      new QRCode(qrContainer, {
+        text: "<%= remoteUrl %>?pairId=" + playerId,
+        width: 36,
+        height: 36,
+        colorDark: "#ffffff",
+        colorLight: "#0f172a",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    }
+  });
+
+  // Função para controle do Modal de Upload
+  function toggleUploadModal() {
+    const modalEl = document.getElementById('uploadModal');
+    if (modalEl) {
+      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      if (modalEl.classList.contains('show')) {
+        modal.hide();
+      } else {
+        modal.show();
+      }
+    }
+  }
+
+  // Função para controle do Modal de Criar Pasta
+  function toggleCreateFolderModal() {
+    const modalEl = document.getElementById('createFolderModal');
+    if (modalEl) {
+      const pathInput = document.getElementById('createFolderPathInput');
+      if (pathInput) {
+        const currentPathVal = new URLSearchParams(window.location.search).get('path') || '';
+        pathInput.value = currentPathVal;
+      }
+
+      const isHiddenCheckbox = document.getElementById('createDirIsHidden');
+      if (isHiddenCheckbox) {
+        isHiddenCheckbox.checked = false;
+      }
+
+      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      if (modalEl.classList.contains('show')) {
+        modal.hide();
+      } else {
+        modal.show();
+        const nameInput = document.getElementById('dirNameInput');
+        if (nameInput) {
+          setTimeout(() => nameInput.focus(), 150);
+        }
+      }
+    }
+  }
+
+  // WebSocket Remote Control Receiver (Player role)
+  (function() {
+    function isMobileDevice() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+    if (isMobileDevice()) {
+      return;
+    }
+
+    let ws;
+    function connectWS() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${protocol}//${window.location.host}`);
+      
+      ws.onopen = () => {
+        ws.send(JSON.stringify({ type: 'register', role: 'player', playerId: playerId }));
+      };
+      
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'command') {
+            handleRemoteCommand(data.action, data);
+          } else if (data.type === 'auth_request') {
+            handleAuthRequest(data);
+          }
+        } catch (e) {
+          console.error("WS error parsing message:", e);
+        }
+      };
+      
+      ws.onclose = () => {
+        setTimeout(connectWS, 3000);
+      };
+    }
+
+    function handleAuthRequest(data) {
+      const title = '<%= t("remote_auth_title") %>';
+      const desc = '<%= t("remote_auth_desc") %>';
+      const remoteInfo = data.userAgent || 'Celular';
+      
+      if (window.Swal) {
+        Swal.fire({
+          title: title,
+          text: `${desc} (${remoteInfo})`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: '<%= t("allow") %>',
+          cancelButtonText: '<%= t("block") %>',
+          confirmButtonColor: '#7c3aed',
+          cancelButtonColor: '#ef4444',
+          background: '#0f172a',
+          color: '#ffffff',
+          allowOutsideClick: false
+        }).then((result) => {
+          ws.send(JSON.stringify({
+            type: 'auth_response',
+            remoteId: data.remoteId,
+            allowed: result.isConfirmed
+          }));
+        });
+      } else {
+        const allowed = confirm(`${title}\n\n${desc}\nDevice: ${remoteInfo}`);
+        ws.send(JSON.stringify({
+          type: 'auth_response',
+          remoteId: data.remoteId,
+          allowed: allowed
+        }));
+      }
+    }
+    
+    function handleRemoteCommand(action, data) {
+      const media = document.querySelector('video, audio');
+      
+      switch(action) {
+        case 'play':
+          if (typeof slideshowTogglePlay === 'function') {
+            slideshowTogglePlay();
+          } else if (media) {
+            if (media.paused) media.play().catch(e => {});
+            else media.pause();
+          }
+          break;
+        case 'pause':
+          if (typeof slideshowTogglePlay === 'function' && slideshowIsPlaying) {
+            slideshowTogglePlay();
+          } else if (media) {
+            media.pause();
+          }
+          break;
+        case 'next':
+          dispatchKey('ArrowRight');
+          break;
+        case 'prev':
+          dispatchKey('ArrowLeft');
+          break;
+        case 'fullscreen':
+          if (typeof slideshowFullscreen === 'function') {
+            slideshowFullscreen();
+          } else if (media) {
+            if (media.requestFullscreen) media.requestFullscreen();
+          }
+          break;
+        case 'volume_up':
+          if (media) media.volume = Math.min(media.volume + 0.1, 1);
+          break;
+        case 'volume_down':
+          if (media) media.volume = Math.max(media.volume - 0.1, 0);
+          break;
+        case 'mute':
+          if (media) media.muted = !media.muted;
+          break;
+        case 'toggle_view':
+          if (data.view === 'list' && typeof showListView === 'function') showListView();
+          if (data.view === 'grid' && typeof showGridView === 'function') showGridView();
+          if (data.view === 'slideshow' && typeof showSlideshowView === 'function') showSlideshowView();
+          break;
+        case 'back':
+          window.location.href = '/';
+          break;
+        case 'play_media':
+          const filePath = data.path;
+          const isVideo = filePath.match(/\.(mp4|webm|ogg|mkv|mov)$/i);
+          if (isVideo) {
+            window.location.href = `/play?video=${encodeURIComponent(filePath)}`;
+          } else {
+            window.location.href = `/shared/${encodeURIComponent(filePath)}`;
+          }
+          break;
+        case 'navigate_up':
+          navigateFocus('ArrowUp');
+          break;
+        case 'navigate_down':
+          navigateFocus('ArrowDown');
+          break;
+        case 'navigate_left':
+          navigateFocus('ArrowLeft');
+          break;
+        case 'navigate_right':
+          navigateFocus('ArrowRight');
+          break;
+        case 'select':
+          const active = document.activeElement;
+          if (active && active !== document.body) {
+            active.click();
+          }
+          break;
+        case 'type_text':
+          const activeInput = document.activeElement;
+          if (activeInput && (activeInput.tagName === 'INPUT' || activeInput.tagName === 'TEXTAREA')) {
+            activeInput.value = data.value;
+            activeInput.dispatchEvent(new Event('input', { bubbles: true }));
+            activeInput.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          break;
+        case 'submit_input':
+          const actEl = document.activeElement;
+          if (actEl) {
+            const form = actEl.closest('form');
+            if (form) {
+              form.requestSubmit();
+            } else {
+              actEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+            }
+          }
+          break;
+      }
+    }
+    
+    function navigateFocus(key) {
+      const focusableSelector = 'a, button, input, select, textarea, [tabindex="0"]';
+      const items = Array.from(document.querySelectorAll(focusableSelector)).filter(el => {
+        return el.offsetWidth > 0 && el.offsetHeight > 0 && !el.disabled;
+      });
+      if (items.length > 0) {
+        let idx = items.indexOf(document.activeElement);
+        if (key === 'ArrowDown' || key === 'ArrowRight') {
+          idx = (idx + 1) % items.length;
+          items[idx].focus();
+        } else if (key === 'ArrowUp' || key === 'ArrowLeft') {
+          idx = (idx - 1 + items.length) % items.length;
+          items[idx].focus();
+        }
+        
+        // Ensure standard keyboard event is also dispatched
+        dispatchKey(key);
+      }
+    }
+
+    function dispatchKey(key) {
+      const ev = new KeyboardEvent('keydown', {
+        key: key,
+        code: key,
+        bubbles: true,
+        cancelable: true
+      });
+      document.dispatchEvent(ev);
+      
+      if (key === 'ArrowUp') {
+        window.scrollBy({ top: -120, behavior: 'smooth' });
+      } else if (key === 'ArrowDown') {
+        window.scrollBy({ top: 120, behavior: 'smooth' });
+      }
+    }
+
+    function sendInputFocus(el) {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'input_focus',
+          inputType: el.type || 'text',
+          inputValue: el.value || '',
+          placeholder: el.placeholder || ''
+        }));
+      }
+    }
+
+    function sendInputBlur() {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'input_blur'
+        }));
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      connectWS();
+      
+      // Detecção de foco para teclado virtual remoto
+      document.addEventListener('focusin', (e) => {
+        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+          sendInputFocus(e.target);
+        }
+      });
+      
+      document.addEventListener('focusout', (e) => {
+        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+          sendInputBlur();
+        }
+      });
+    });
+  })();
+</script>

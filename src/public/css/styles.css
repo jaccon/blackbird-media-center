@@ -1,0 +1,235 @@
+/* Custom Premium Dark Theme for Black Bird Media Center */
+
+body {
+  background-color: #0b0f19;
+  color: #f8fafc;
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+.font-outfit {
+  font-family: 'Outfit', sans-serif;
+}
+
+/* Glassmorphism Panel styles */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Custom premium card design matching Tailwind scaled hover cards */
+.card-premium {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 1rem !important;
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+  height: 100%;
+}
+
+.card-premium:hover {
+  transform: scale(1.02);
+  border-color: rgba(124, 58, 237, 0.3) !important;
+  box-shadow: 0 10px 30px rgba(124, 58, 237, 0.15) !important;
+}
+
+.card-premium .card-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  padding: 1.25rem;
+}
+
+/* Brand text gradient from violet-400 to fuchsia-400 */
+.text-gradient {
+  background: linear-gradient(to right, #a78bfa, #e879f9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Premium Gradient backgrounds */
+.bg-premium-gradient {
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+}
+
+/* Custom transitions and states */
+.transition-all-200 {
+  transition: all 0.2s ease;
+}
+
+/* Custom colors and overrides for Bootstrap components */
+.btn-premium-primary {
+  background-color: #7c3aed;
+  border-color: #7c3aed;
+  color: #fff;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+}
+
+.btn-premium-primary:hover, .btn-premium-primary:focus, .btn-premium-primary:active {
+  background-color: #6d28d9 !important;
+  border-color: #6d28d9 !important;
+  color: #fff !important;
+  box-shadow: 0 0 15px rgba(124, 58, 237, 0.4) !important;
+}
+
+.btn-premium-secondary {
+  background-color: #0f172a;
+  border-color: #1e293b;
+  color: #e2e8f0;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+}
+
+.btn-premium-secondary:hover, .btn-premium-secondary:focus {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #fff !important;
+}
+
+/* Bootstrap Nav items customized styling */
+.nav-link-premium {
+  color: #94a3b8 !important;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  padding: 0.375rem 0.75rem !important;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.nav-link-premium:hover {
+  color: #fff !important;
+  background-color: rgba(30, 41, 59, 0.5);
+}
+
+.nav-link-premium.active {
+  color: #fff !important;
+  background-color: #1e293b !important;
+}
+
+/* Custom Inputs styles */
+.input-premium {
+  background-color: rgba(2, 6, 23, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #f1f5f9 !important;
+  border-radius: 0.5rem !important;
+  font-size: 0.875rem !important;
+  padding: 0.5rem 0.75rem !important;
+  transition: border-color 0.2s ease !important;
+}
+
+.input-premium:focus {
+  border-color: #7c3aed !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.input-premium::placeholder {
+  color: #475569 !important;
+}
+
+/* Bootstrap Modal customization for premium dark layout */
+.modal-content-premium {
+  background-color: #0f172a !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+  color: #f8fafc !important;
+}
+
+.modal-header-premium {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 1.25rem 1.5rem !important;
+}
+
+.modal-footer-premium {
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 1rem 1.5rem !important;
+}
+
+/* Table styling for dark theme list views */
+.table-premium {
+  background-color: transparent !important;
+  color: #e2e8f0 !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
+  margin-bottom: 0 !important;
+}
+
+.table-premium th {
+  background-color: rgba(2, 6, 23, 0.6) !important;
+  color: #94a3b8 !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 1rem !important;
+}
+
+.table-premium td {
+  background-color: transparent !important;
+  padding: 1rem !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  vertical-align: middle !important;
+  color: #cbd5e1 !important;
+}
+
+.table-row-premium:hover td {
+  background-color: rgba(30, 41, 59, 0.2) !important;
+  color: #fff !important;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Pulse indicator */
+.pulse-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #ef4444;
+  display: inline-block;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}

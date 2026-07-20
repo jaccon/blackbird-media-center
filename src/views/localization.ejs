@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Localization & Tracking - Black Bird Media Center</title>
+  
+  <!-- Leaflet CSS for Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <!-- Lightbox Gallery CSS -->
+  <link rel="stylesheet" href="/css/lightbox.min.css">
+  
+  <style>
+    #map {
+      height: 550px;
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      background-color: #0b0f19;
+    }
+    .leaflet-container {
+      background: #0b0f19 !important;
+    }
+    .track-history-card {
+      background: rgba(15, 23, 42, 0.6) !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      border-radius: 16px !important;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      max-height: 550px;
+      overflow-y: auto;
+    }
+    .text-glow-purple {
+      text-shadow: 0 0 10px rgba(167, 139, 250, 0.5);
+    }
+  </style>
+</head>
+<body class="bg-dark text-light min-vh-screen">
+
+  <%- include('header') %>
+
+  <!-- Modal de Upload (Necessário por estar no header.ejs) -->
+  <div class="modal fade animate" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-content-premium border-0">
+        <div class="modal-header modal-header-premium border-0">
+          <h5 class="modal-title font-outfit fw-bold text-white" id="uploadModalLabel">Upload de Arquivos</h5>
+          <button type="button" class="btn-close btn-close-white" onclick="toggleUploadModal()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <input type="hidden" id="currentPath" value="">
+          <label class="d-flex flex-column align-items-center justify-content-center w-100 border border-secondary border-dashed rounded-3 cursor-pointer p-4 bg-dark bg-opacity-25 hover-bg-dark transition-all-200 select-files-box" style="height: 176px; border-style: dashed !important; border-width: 2px !important; border-color: rgba(255,255,255,0.1) !important;">
+            <div class="d-flex flex-column align-items-center justify-content-center text-center">
+              <i class="bi bi-cloud-arrow-up text-secondary fs-1 mb-2 upload-icon"></i>
+              <p class="mb-1 text-light fw-bold small">Selecione arquivos para upload</p>
+              <p class="text-secondary small mb-0" style="font-size: 11px;">Mídia enviada ficará disponível na raiz</p>
+            </div>
+            <input type="file" id="fileInput" class="d-none" multiple>
+          </label>
+          <div id="selectedFilesInfo" class="small text-secondary mt-3 p-3 rounded bg-dark bg-opacity-50 border border-secondary border-opacity-10 d-none" style="max-height: 110px; overflow-y: auto;"></div>
+        </div>
+        <div class="modal-footer modal-footer-premium border-0">
+          <button type="button" class="btn btn-premium-secondary" onclick="toggleUploadModal()">Cancelar</button>
+          <button type="button" class="btn btn-premium-primary border-0" id="uploadFilesBtn">Enviar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-xl py-4 px-3">
+    
+    <!-- Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+      <div>
+        <h2 class="fs-4 fw-bold text-white font-outfit m-0">
+          <i class="bi bi-geo-alt-fill text-gradient me-2"></i>Localization & Tracking
+        </h2>
+        <p class="text-secondary small m-0 mt-1">Rastreamento de deslocamento geográfico no mapa escuro e histórico de percurso.</p>
+      </div>
+      
+      <!-- Controle de Tracking Público -->
+      <div class="d-flex align-items-center gap-3 bg-dark bg-opacity-50 border border-secondary border-opacity-10 py-2 px-3 rounded-3">
+        <div class="form-check form-switch m-0">
+          <input class="form-check-input cursor-pointer" type="checkbox" id="publicTrackingSwitch" <%= (isPublic) ? 'checked' : '' %>>
+          <label class="form-check-label text-secondary small fw-semibold font-outfit cursor-pointer" for="publicTrackingSwitch">
+            Rastreamento Público
+          </label>
+        </div>
+        <button onclick="sendLocationNow()" class="btn btn-sm btn-premium-primary border-0 font-outfit">
+          <i class="bi bi-geo me-1"></i>Atualizar Agora
+        </button>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      
+      <!-- Mapa OpenStreetMap Dark -->
+      <div class="col-lg-8">
+        <div id="map"></div>
+      </div>
+
+      <!-- Histórico de Percurso e Seleção de Outros Usuários -->
+      <div class="col-lg-4">
+        <div class="track-history-card p-4 h-100 d-flex flex-column">
+          
+          <!-- Selecionar Usuário para Ver no Mapa -->
+          <div class="mb-4">
+            <h5 class="text-white fw-bold font-outfit fs-6 mb-2.5">
+              <i class="bi bi-people text-gradient me-1"></i>Outros Percursos Públicos
+            </h5>
+            <select class="form-select input-premium text-light" id="otherUserSelect">
+              <option value="">-- Selecione um Usuário --</option>
+              <% Object.keys(publicUsers).forEach(uName => { %>
+                <% if (uName !== currentUser) { %>
+                  <option value="<%= uName %>"><%= uName %> (Público)</option>
+                <% } %>
+              <% }); %>
+            </select>
+          </div>
+
+          <hr class="border-secondary border-opacity-20 my-3">
+
+          <!-- Histórico de Coordenadas Recentes -->
+          <div class="flex-grow-1 overflow-auto">
+            <h5 class="text-white fw-bold font-outfit fs-6 mb-3 d-flex justify-content-between align-items-center">
+              <span><i class="bi bi-clock-history text-gradient me-1"></i>Seu Histórico Recente</span>
+              <span class="badge bg-secondary border border-secondary border-opacity-15 font-outfit text-white-50" style="font-size: 10px;" id="coordsCountBadge">
+                <%= (userCoordinates.length) %> registros
+              </span>
+            </h5>
+            
+            <div class="list-group list-group-flush bg-transparent" id="coordsListGroup">
+              <% if (userCoordinates.length === 0) { %>
+                <div class="text-center py-4 text-secondary small" id="noCoordsText">
+                  <i class="bi bi-pin-map-fill d-block fs-3 mb-2 opacity-50 text-secondary"></i>
+                  Nenhum deslocamento gravado ainda.
+                </div>
+              <% } else { %>
+                <% userCoordinates.forEach((coord, idx) => { %>
+                  <div class="list-group-item bg-transparent border-secondary border-opacity-10 px-0 py-2.5 d-flex align-items-center justify-content-between">
+                    <div class="d-flex flex-column">
+                      <span class="text-white-50 small fw-bold font-outfit">Lat: <%= coord.lat.toFixed(6) %></span>
+                      <span class="text-white-50 small fw-bold font-outfit">Lng: <%= coord.lng.toFixed(6) %></span>
+                    </div>
+                    <span class="text-secondary small" style="font-size: 10px;">
+                      <%= coord.time %>
+                    </span>
+                  </div>
+                <% }); %>
+              <% } %>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Leaflet JS for Map -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  
+  <script>
+    // Configurações EJS Injetadas
+    const currentUser = "<%= currentUser %>";
+    let myCoordinates = <%- JSON.stringify(userCoordinates) %>;
+    const publicUsersData = <%- JSON.stringify(publicUsers) %>;
+
+    // Inicialização do Mapa
+    const map = L.map('map').setView([0, 0], 2);
+    
+    // OpenStreetMap Black / Dark Matter tiles
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 20
+    }).addTo(map);
+
+    // Variáveis Globais de Renderização
+    let myPolyline = null;
+    let myMarker = null;
+    let otherPolyline = null;
+    let otherMarker = null;
+
+    // Atualiza o Percurso do Próprio Usuário
+    function updateMyTrailOnMap() {
+      if (myCoordinates.length === 0) return;
+
+      const pathCoords = myCoordinates.map(c => [c.lat, c.lng]);
+
+      // Remove polilinhas e marcadores antigos
+      if (myPolyline) map.removeLayer(myPolyline);
+      if (myMarker) map.removeLayer(myMarker);
+
+      // Desenha o percurso do usuário (Violet/Purple Glow color)
+      myPolyline = L.polyline(pathCoords, {
+        color: '#a78bfa',
+        weight: 4,
+        opacity: 0.9,
+        lineCap: 'round',
+        lineJoin: 'round'
+      }).addTo(map);
+
+      // Posiciona marcador no último local registrado
+      const lastCoord = myCoordinates[0]; // Ordenado do mais recente ao mais antigo
+      myMarker = L.circleMarker([lastCoord.lat, lastCoord.lng], {
+        radius: 8,
+        fillColor: '#8b5cf6',
+        color: '#ffffff',
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 0.9
+      }).addTo(map)
+        .bindPopup(`<b>Você</b><br>Lat: ${lastCoord.lat.toFixed(6)}<br>Lng: ${lastCoord.lng.toFixed(6)}<br>Hora: ${lastCoord.time}`)
+        .openPopup();
+
+      // Ajusta zoom do mapa para abranger o percurso
+      map.fitBounds(myPolyline.getBounds(), { padding: [50, 50] });
+    }
+
+    // Atualiza Percurso de Outro Usuário
+    function drawOtherUserTrail(uName) {
+      if (otherPolyline) map.removeLayer(otherPolyline);
+      if (otherMarker) map.removeLayer(otherMarker);
+
+      const uData = publicUsersData[uName];
+      if (!uData || !uData.path || uData.path.length === 0) return;
+
+      const pathCoords = uData.path.map(c => [c.lat, c.lng]);
+
+      // Desenha o percurso (Fuchsia/Pink color para outro usuário)
+      otherPolyline = L.polyline(pathCoords, {
+        color: '#f43f5e',
+        weight: 4,
+        opacity: 0.8,
+        lineCap: 'round',
+        lineJoin: 'round'
+      }).addTo(map);
+
+      const lastCoord = uData.path[0]; // Recente
+      otherMarker = L.circleMarker([lastCoord.lat, lastCoord.lng], {
+        radius: 8,
+        fillColor: '#ec4899',
+        color: '#ffffff',
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 0.9
+      }).addTo(map)
+        .bindPopup(`<b>${uName}</b><br>Lat: ${lastCoord.lat.toFixed(6)}<br>Lng: ${lastCoord.lng.toFixed(6)}<br>Hora: ${lastCoord.time}`)
+        .openPopup();
+
+      // Centralizar mapa englobando ambos os percursos
+      const bounds = myPolyline ? myPolyline.getBounds().extend(otherPolyline.getBounds()) : otherPolyline.getBounds();
+      map.fitBounds(bounds, { padding: [50, 50] });
+    }
+
+    // Evento de seleção de outro usuário
+    document.getElementById('otherUserSelect').addEventListener('change', function(e) {
+      const uName = e.target.value;
+      if (uName) {
+        drawOtherUserTrail(uName);
+      } else {
+        if (otherPolyline) map.removeLayer(otherPolyline);
+        if (otherMarker) map.removeLayer(otherMarker);
+        if (myPolyline) map.fitBounds(myPolyline.getBounds());
+      }
+    });
+
+    // Enviar Geolocalização para o Backend
+    function sendLocationNow() {
+      if (!navigator.geolocation) {
+        alert("Geolocalização não é suportada por seu navegador.");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(position => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        fetch('/api/localization/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lat, lng })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            myCoordinates = data.path;
+            updateMyTrailOnMap();
+            rebuildHistoryTable(data.path);
+          } else {
+            console.error("Falha ao salvar localização:", data.error);
+          }
+        })
+        .catch(err => console.error("Erro na requisição:", err));
+      }, err => {
+        alert("Erro ao obter geolocalização: " + err.message);
+      }, {
+        enableHighAccuracy: true
+      });
+    }
+
+    // Reconstrói a lista do Histórico no painel lateral
+    function rebuildHistoryTable(path) {
+      const listGroup = document.getElementById('coordsListGroup');
+      const badge = document.getElementById('coordsCountBadge');
+      
+      badge.textContent = `${path.length} registros`;
+      listGroup.innerHTML = '';
+
+      if (path.length === 0) {
+        listGroup.innerHTML = `
+          <div class="text-center py-4 text-secondary small" id="noCoordsText">
+            <i class="bi bi-pin-map-fill d-block fs-3 mb-2 opacity-50 text-secondary"></i>
+            Nenhum deslocamento gravado ainda.
+          </div>`;
+        return;
+      }
+
+      path.forEach(coord => {
+        const item = document.createElement('div');
+        item.className = "list-group-item bg-transparent border-secondary border-opacity-10 px-0 py-2.5 d-flex align-items-center justify-content-between";
+        item.innerHTML = `
+          <div class="d-flex flex-column">
+            <span class="text-white-50 small fw-bold font-outfit">Lat: ${coord.lat.toFixed(6)}</span>
+            <span class="text-white-50 small fw-bold font-outfit">Lng: ${coord.lng.toFixed(6)}</span>
+          </div>
+          <span class="text-secondary small" style="font-size: 10px;">
+            ${coord.time}
+          </span>
+        `;
+        listGroup.appendChild(item);
+      });
+    }
+
+    // Toggle de Rastreamento Público
+    document.getElementById('publicTrackingSwitch').addEventListener('change', function(e) {
+      const isPublic = e.target.checked;
+      fetch('/api/localization/public-toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isPublic })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) {
+          e.target.checked = !isPublic;
+          alert("Erro ao alterar privacidade do tracking.");
+        }
+      });
+    });
+
+    // Rastreamento Automático Periódico (A cada 5 minutos)
+    sendLocationNow();
+    setInterval(sendLocationNow, 300000); // 300.000 ms = 5 minutos
+  </script>
+</body>
+</html>

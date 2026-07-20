@@ -1,4 +1,300 @@
 <!-- Local stylesheets & script assets (Offline-capable & TV compatible) -->
+<% if (typeof config !== 'undefined' && config.layoutFullWidth) { %>
+<style>
+  @media (min-width: 1200px) {
+    .container-xl {
+      max-width: 100% !important;
+    }
+    .kanban-column {
+      max-width: none !important;
+    }
+  }
+</style>
+<% } %>
+
+<% if (typeof config !== 'undefined' && config.theme) { %>
+  <% if (config.theme === 'neon_midnight') { %>
+    <style>
+      /* Fundo da Página Geral */
+      body, html, .bg-dark, .min-vh-screen, .app-container {
+        background-color: #000000 !important;
+        background: #000000 !important;
+        background-image: radial-gradient(circle at top right, rgba(139, 92, 246, 0.12), transparent 45%), radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.08), transparent 45%) !important;
+        color: #f8fafc !important;
+      }
+      .bg-dark.bg-opacity-75, .bg-dark.bg-opacity-50, .bg-dark.bg-opacity-25, .bg-dark.bg-opacity-10 {
+        background-color: #000000 !important;
+      }
+      
+      /* Cards e Containers Principais */
+      .card, .card-premium, .modal-content-premium, .offcanvas, .modal-content, .dropdown-menu {
+        background: #050505 !important;
+        background-color: #050505 !important;
+        border: 1px solid rgba(139, 92, 246, 0.25) !important;
+        box-shadow: 0 0 25px rgba(139, 92, 246, 0.05) !important;
+        color: #f8fafc !important;
+      }
+      .card:hover, .card-premium:hover, .card-premium-action:hover {
+        border-color: rgba(236, 72, 153, 0.5) !important;
+        box-shadow: 0 0 30px rgba(236, 72, 153, 0.2) !important;
+      }
+      
+      /* Substitui o tom azul marinho escuro inline por preto puro nos containers do sistema */
+      [style*="background-color: rgba(15, 23, 42"], [style*="background: rgba(15, 23, 42"], .container-xl {
+        background-color: #000000 !important;
+        background: #000000 !important;
+      }
+      [style*="background-color: rgba(15, 23, 42, 0.25)"], [style*="background: rgba(15, 23, 42, 0.25)"],
+      [style*="background-color: rgba(15, 23, 42, 0.3)"], [style*="background: rgba(15, 23, 42, 0.3)"] {
+        background-color: #000000 !important;
+        background: #000000 !important;
+      }
+      
+      /* Header e Navegação */
+      header, nav, .sticky-top {
+        background-color: rgba(2, 2, 2, 0.95) !important;
+        border-bottom: 1px solid rgba(139, 92, 246, 0.2) !important;
+      }
+      
+      /* Links da barra de navegação */
+      .nav-link-premium {
+        color: #94a3b8 !important;
+      }
+      .nav-link-premium:hover {
+        color: #ffffff !important;
+        background-color: rgba(139, 92, 246, 0.15) !important;
+        border-color: rgba(139, 92, 246, 0.4) !important;
+      }
+      .nav-link-premium.active {
+        color: #ffffff !important;
+        background: linear-gradient(to right, rgba(139, 92, 246, 0.25), rgba(236, 72, 153, 0.15)) !important;
+        border: 1px solid rgba(139, 92, 246, 0.5) !important;
+      }
+
+      /* Formulários, Inputs e Caixas de Seleção */
+      .input-premium, .form-control, .form-select {
+        background-color: rgba(5, 5, 5, 0.95) !important;
+        border: 1px solid rgba(139, 92, 246, 0.3) !important;
+        color: #f8fafc !important;
+      }
+      .input-premium:focus, .form-control:focus, .form-select:focus {
+        border-color: #ec4899 !important;
+        box-shadow: 0 0 10px rgba(236, 72, 153, 0.25) !important;
+      }
+      
+      /* Botões */
+      .btn-premium-primary, .btn-primary {
+        background: linear-gradient(to right, #8b5cf6, #ec4899) !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 15px rgba(139, 92, 246, 0.3) !important;
+        border: none !important;
+      }
+      .btn-premium-primary:hover, .btn-primary:hover {
+        background: linear-gradient(to right, #ec4899, #8b5cf6) !important;
+        box-shadow: 0 0 20px rgba(236, 72, 153, 0.5) !important;
+        color: #ffffff !important;
+      }
+      .btn-premium-secondary, .btn-secondary {
+        background: #0a0a0c !important;
+        border: 1px solid rgba(139, 92, 246, 0.4) !important;
+        color: #e2e8f0 !important;
+      }
+      .btn-premium-secondary:hover, .btn-secondary:hover {
+        border-color: #ec4899 !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 12px rgba(236, 72, 153, 0.2) !important;
+      }
+      
+      /* Tabelas e Históricos */
+      .table-premium, .table {
+        background-color: transparent !important;
+        color: #cbd5e1 !important;
+      }
+      .table-premium th, .table th, .table-dark th {
+        background-color: rgba(139, 92, 246, 0.1) !important;
+        border-bottom: 1px solid rgba(139, 92, 246, 0.3) !important;
+        color: #a78bfa !important;
+      }
+      .table td, .table-dark td, .table-premium td {
+        border-color: rgba(139, 92, 246, 0.15) !important;
+        color: #cbd5e1 !important;
+      }
+      
+      /* Elementos do Grid de Arquivos / Library */
+      .video-card, .file-card, .folder-card {
+        background-color: rgba(10, 10, 15, 0.75) !important;
+        border: 1px solid rgba(139, 92, 246, 0.2) !important;
+      }
+      .video-card:hover, .file-card:hover, .folder-card:hover {
+        border-color: #ec4899 !important;
+        box-shadow: 0 0 15px rgba(236, 72, 153, 0.2) !important;
+      }
+      
+      /* SweetAlert Modals */
+      .swal2-popup {
+        background: #08080a !important;
+        border: 1px solid rgba(139, 92, 246, 0.3) !important;
+        box-shadow: 0 0 25px rgba(139, 92, 246, 0.15) !important;
+        color: #ffffff !important;
+      }
+      .swal2-title, .swal2-html-container {
+        color: #ffffff !important;
+      }
+      
+      /* Texto com gradiente e Badges */
+      .text-gradient {
+        background: linear-gradient(to right, #a78bfa, #ec4899) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+      }
+      .badge, .tag-pill {
+        border: 1px solid rgba(139, 92, 246, 0.35) !important;
+        background-color: rgba(139, 92, 246, 0.12) !important;
+        color: #a78bfa !important;
+      }
+    </style>
+  <% } else if (config.theme === 'emerald_abyss') { %>
+    <style>
+      /* Fundo da Página Geral */
+      body, html, .bg-dark, .min-vh-screen, .app-container {
+        background-color: #020604 !important;
+        background-image: radial-gradient(circle at top right, rgba(16, 185, 129, 0.12), transparent 45%), radial-gradient(circle at bottom left, rgba(6, 78, 59, 0.2), transparent 45%) !important;
+        color: #f0fdf4 !important;
+      }
+      .bg-dark.bg-opacity-75, .bg-dark.bg-opacity-50, .bg-dark.bg-opacity-25, .bg-dark.bg-opacity-10 {
+        background-color: #020604 !important;
+      }
+      
+      /* Cards e Containers Principais */
+      .card, .card-premium, .modal-content-premium, .offcanvas, .modal-content, .dropdown-menu {
+        background: rgba(4, 15, 10, 0.95) !important;
+        background-color: rgba(4, 15, 10, 0.95) !important;
+        border: 1px solid rgba(16, 185, 129, 0.3) !important;
+        box-shadow: 0 0 25px rgba(16, 185, 129, 0.08) !important;
+        color: #f0fdf4 !important;
+      }
+      .card:hover, .card-premium:hover, .card-premium-action:hover {
+        border-color: rgba(52, 211, 153, 0.5) !important;
+        box-shadow: 0 0 30px rgba(52, 211, 153, 0.2) !important;
+      }
+      
+      /* Substitui o tom azul marinho escuro inline por verde esmeralda floresta nos containers do sistema */
+      [style*="background-color: rgba(15, 23, 42"], [style*="background: rgba(15, 23, 42"], .container-xl {
+        background-color: #020604 !important;
+        background: #020604 !important;
+      }
+      [style*="background-color: rgba(15, 23, 42, 0.25)"], [style*="background: rgba(15, 23, 42, 0.25)"],
+      [style*="background-color: rgba(15, 23, 42, 0.3)"], [style*="background: rgba(15, 23, 42, 0.3)"] {
+        background-color: #020604 !important;
+        background: #020604 !important;
+      }
+      
+      /* Header e Navegação */
+      header, nav, .sticky-top {
+        background-color: rgba(2, 8, 5, 0.9) !important;
+        border-bottom: 1px solid rgba(16, 185, 129, 0.25) !important;
+      }
+      
+      /* Links da barra de navegação */
+      .nav-link-premium {
+        color: #94a3b8 !important;
+      }
+      .nav-link-premium:hover {
+        color: #ffffff !important;
+        background-color: rgba(16, 185, 129, 0.15) !important;
+        border-color: rgba(16, 185, 129, 0.4) !important;
+      }
+      .nav-link-premium.active {
+        color: #ffffff !important;
+        background: linear-gradient(to right, rgba(16, 185, 129, 0.25), rgba(6, 78, 59, 0.15)) !important;
+        border: 1px solid rgba(16, 185, 129, 0.5) !important;
+      }
+
+      /* Formulários, Inputs e Caixas de Seleção */
+      .input-premium, .form-control, .form-select {
+        background-color: rgba(2, 5, 3, 0.95) !important;
+        border: 1px solid rgba(16, 185, 129, 0.3) !important;
+        color: #f0fdf4 !important;
+      }
+      .input-premium:focus, .form-control:focus, .form-select:focus {
+        border-color: #34d399 !important;
+        box-shadow: 0 0 10px rgba(52, 211, 153, 0.25) !important;
+      }
+      
+      /* Botões */
+      .btn-premium-primary, .btn-primary {
+        background: linear-gradient(to right, #059669, #10b981) !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.3) !important;
+        border: none !important;
+      }
+      .btn-premium-primary:hover, .btn-primary:hover {
+        background: linear-gradient(to right, #10b981, #34d399) !important;
+        box-shadow: 0 0 20px rgba(52, 211, 153, 0.5) !important;
+        color: #ffffff !important;
+      }
+      .btn-premium-secondary, .btn-secondary {
+        background: rgba(3, 8, 5, 0.9) !important;
+        border: 1px solid rgba(16, 185, 129, 0.4) !important;
+        color: #cbd5e1 !important;
+      }
+      .btn-premium-secondary:hover, .btn-secondary:hover {
+        border-color: #34d399 !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 12px rgba(52, 211, 153, 0.2) !important;
+      }
+      
+      /* Tabelas e Históricos */
+      .table-premium, .table {
+        background-color: transparent !important;
+        color: #cbd5e1 !important;
+      }
+      .table-premium th, .table th, .table-dark th {
+        background-color: rgba(16, 185, 129, 0.1) !important;
+        border-bottom: 1px solid rgba(16, 185, 129, 0.3) !important;
+        color: #34d399 !important;
+      }
+      .table td, .table-dark td, .table-premium td {
+        border-color: rgba(16, 185, 129, 0.15) !important;
+        color: #cbd5e1 !important;
+      }
+      
+      /* Elementos do Grid de Arquivos / Library */
+      .video-card, .file-card, .folder-card {
+        background-color: rgba(4, 10, 6, 0.75) !important;
+        border: 1px solid rgba(16, 185, 129, 0.2) !important;
+      }
+      .video-card:hover, .file-card:hover, .folder-card:hover {
+        border-color: #34d399 !important;
+        box-shadow: 0 0 15px rgba(52, 211, 153, 0.2) !important;
+      }
+      
+      /* SweetAlert Modals */
+      .swal2-popup {
+        background: #030a06 !important;
+        border: 1px solid rgba(16, 185, 129, 0.3) !important;
+        box-shadow: 0 0 25px rgba(16, 185, 129, 0.15) !important;
+        color: #ffffff !important;
+      }
+      .swal2-title, .swal2-html-container {
+        color: #ffffff !important;
+      }
+      
+      /* Texto com gradiente e Badges */
+      .text-gradient {
+        background: linear-gradient(to right, #34d399, #10b981) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+      }
+      .badge, .tag-pill {
+        border: 1px solid rgba(16, 185, 129, 0.35) !important;
+        background-color: rgba(16, 185, 129, 0.12) !important;
+        color: #34d399 !important;
+      }
+    </style>
+  <% } %>
+<% } %>
+
 <link rel="stylesheet" href="/css/bootstrap.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -60,69 +356,178 @@
 
 <!-- Submenu / Navegação de Seções -->
 <nav class="w-100 bg-dark bg-opacity-25 border-bottom border-secondary border-opacity-10 py-2">
-  <div class="container-xl d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-3 px-3">
+  <div class="container-xl d-flex align-items-center px-3">
     <!-- Links Principais -->
-    <div class="d-flex flex-wrap align-items-center gap-1">
+    <div class="d-flex flex-wrap align-items-center gap-1 flex-fill">
       <a href="/dashboard" class="nav-link-premium text-decoration-none" style="font-size: 13px;">
         <i class="bi bi-speedometer2 text-info"></i>
         <span><%= t('dashboard') %></span>
       </a>
-      <a href="/videos" class="nav-link-premium text-decoration-none">
-        <i class="bi bi-film text-fuchsia-500"></i>
-        <span><%= t('videos') %></span>
-      </a>
-      <a href="/photos" class="nav-link-premium text-decoration-none">
-        <i class="bi bi-image text-primary-emphasis"></i>
-        <span><%= t('photos') %></span>
-      </a>
-      <a href="/music" class="nav-link-premium text-decoration-none">
-        <i class="bi bi-music-note-beamed text-danger"></i>
-        <span><%= t('music') %></span>
-      </a>
-      <a href="/explorer" class="nav-link-premium text-decoration-none">
-        <i class="bi bi-folder2-open text-warning"></i>
-        <span><%= t('explorer') %></span>
-      </a>
 
-      <!-- Divisor Vertical -->
-      <div class="vr bg-secondary opacity-25 mx-2 d-none d-sm-block" style="height: 20px;"></div>
+      <!-- Dropdown Files -->
+      <div class="dropdown d-inline-block">
+        <button class="nav-link-premium text-decoration-none bg-transparent border-0 dropdown-toggle" type="button" id="dropdownFiles" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 13px; outline: none; box-shadow: none;">
+          <i class="bi bi-folder2-open text-warning"></i>
+          <span><%= t('files') %></span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-dark border border-secondary border-opacity-10 bg-dark shadow-lg animate" aria-labelledby="dropdownFiles">
+          <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 font-outfit py-2" href="/videos" style="font-size: 13px;">
+              <i class="bi bi-film text-fuchsia-500 fs-6"></i>
+              <span><%= t('videos') %></span>
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 font-outfit py-2" href="/photos" style="font-size: 13px;">
+              <i class="bi bi-image text-primary-emphasis fs-6"></i>
+              <span><%= t('photos') %></span>
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 font-outfit py-2" href="/music" style="font-size: 13px;">
+              <i class="bi bi-music-note-beamed text-danger fs-6"></i>
+              <span><%= t('music') %></span>
+            </a>
+          </li>
+          <li>
+            <hr class="dropdown-divider border-secondary border-opacity-20 my-1">
+          </li>
+          <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 font-outfit py-2" href="/explorer" style="font-size: 13px;">
+              <i class="bi bi-folder2 text-warning fs-6"></i>
+              <span>Explorer</span>
+            </a>
+          </li>
+        </ul>
+      </div>
 
-      <a href="/cameras" class="nav-link-premium text-decoration-none" style="font-size: 13px;">
-        <i class="bi bi-camera-video text-secondary"></i>
-        <span><%= t('cameras') %></span>
-      </a>
       <a href="/favorites" class="nav-link-premium text-decoration-none" style="font-size: 13px;">
         <i class="bi bi-star text-warning"></i>
         <span><%= t('favorites') %></span>
       </a>
 
-      <a href="/settings" class="nav-link-premium text-decoration-none" style="font-size: 13px;">
-        <i class="bi bi-gear text-info"></i>
-        <span><%= t('settings') %></span>
-      </a>
-      <a href="/remote" class="nav-link-premium text-decoration-none" style="font-size: 13px;">
+      <!-- Dropdown Applications -->
+      <div class="dropdown d-inline-block">
+        <button class="nav-link-premium text-decoration-none bg-transparent border-0 dropdown-toggle" type="button" id="dropdownApplications" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 13px; outline: none; box-shadow: none;">
+          <i class="bi bi-grid-fill text-fuchsia-500"></i>
+          <span>Applications</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-dark border border-secondary border-opacity-10 bg-dark shadow-lg animate" aria-labelledby="dropdownApplications">
+          <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 font-outfit py-2" href="/cameras" style="font-size: 13px;">
+              <i class="bi bi-camera-video text-secondary fs-6"></i>
+              <span>Cameras</span>
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 font-outfit py-2" href="/home-control" style="font-size: 13px;">
+              <i class="bi bi-house-gear text-fuchsia-500 fs-6"></i>
+              <span><%= t('home_control') %></span>
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 font-outfit py-2" href="/notes" style="font-size: 13px;">
+              <i class="bi bi-sticky text-warning fs-6"></i>
+              <span>Notes</span>
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 font-outfit py-2" href="/ai" style="font-size: 13px;">
+              <i class="bi bi-chat-dots text-primary fs-6"></i>
+              <span>AI</span>
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 font-outfit py-2" href="/tasks" style="font-size: 13px;">
+              <i class="bi bi-kanban text-info fs-6"></i>
+              <span><%= t('tasks') %></span>
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 font-outfit py-2" href="/localization" style="font-size: 13px;">
+              <i class="bi bi-geo-alt-fill text-gradient fs-6"></i>
+              <span>Localization</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Dropdown Setup -->
+      <div class="dropdown d-inline-block">
+        <button class="nav-link-premium text-decoration-none bg-transparent border-0 dropdown-toggle" type="button" id="dropdownSetup" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 13px; outline: none; box-shadow: none;">
+          <i class="bi bi-sliders text-gradient"></i>
+          <span>Setup</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-dark border border-secondary border-opacity-10 bg-dark shadow-lg animate" aria-labelledby="dropdownSetup">
+          <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 font-outfit py-2" href="/settings" style="font-size: 13px;">
+              <i class="bi bi-gear text-info fs-6"></i>
+              <span>Settings</span>
+            </a>
+          </li>
+          <% if (typeof userGroup !== 'undefined' && userGroup === 'admin') { %>
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2 font-outfit py-2" href="/users" style="font-size: 13px;">
+                <i class="bi bi-people text-success fs-6"></i>
+                <span>Users</span>
+              </a>
+            </li>
+          <% } %>
+        </ul>
+      </div>
+
+      <a href="/remote" class="nav-link-premium text-decoration-none d-flex d-lg-none" style="font-size: 13px;">
         <i class="bi bi-controller text-gradient"></i>
         <span><%= t('remote_control') %></span>
       </a>
+      <!-- Notification Icon Bell -->
+      <% 
+        const unreadCount = typeof notifications !== 'undefined' ? notifications.filter(n => !n.read).length : 0;
+      %>
+      <a href="/notifications" class="nav-link-premium text-decoration-none d-flex align-items-center gap-1.5 position-relative" style="font-size: 13px;">
+        <i class="bi bi-bell-fill text-warning"></i>
+        <span><%= t('notifications') %></span>
+        <% if (unreadCount > 0) { %>
+          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-dark" style="font-size: 8px; padding: 0.25em 0.5em;">
+            <%= unreadCount %>
+          </span>
+        <% } %>
+      </a>
+
+      <button id="sidebarChatToggleBtn" class="nav-link-premium text-decoration-none bg-transparent border-0 d-flex align-items-center gap-2" style="font-size: 13px; outline: none; box-shadow: none;">
+        <i class="bi bi-robot text-primary"></i>
+        <span><%= t('chat_ai') %></span>
+      </button>
       <% if (typeof config !== 'undefined' && config.authEnabled) { %>
-        <a href="/logout" class="nav-link-premium text-decoration-none ms-md-auto text-danger hover-text-danger" style="font-size: 13px;">
+        <% if (typeof username !== 'undefined' && username) { %>
+          <span class="nav-link-premium text-decoration-none border-0 text-secondary pe-none ms-md-auto" style="font-size: 13px;">
+            <i class="bi bi-person-fill text-gradient"></i>
+            <span><%= username %></span>
+          </span>
+        <% } %>
+        <a href="/logout" class="nav-link-premium text-decoration-none text-danger hover-text-danger" style="font-size: 13px; <%= (typeof username !== 'undefined' && username) ? 'margin-left: 1rem !important;' : 'margin-left: auto !important;' %>">
           <i class="bi bi-box-arrow-right text-danger"></i>
           <span><%= t('logout') %></span>
         </a>
       <% } %>
 
     </div>
-
-    <!-- Barra de Pesquisa Global -->
-    <form action="/explorer" method="GET" class="position-relative m-0" style="min-width: 250px;">
-      <input type="text" name="search" placeholder="<%= t('search_placeholder') %>"
-        value="<%= typeof search !== 'undefined' ? search : '' %>" class="form-control input-premium w-100"
-        style="padding-left: 2.5rem !important;">
-      <i class="bi bi-search position-absolute text-secondary"
-        style="left: 16px; top: 50%; transform: translateY(-50%); font-size: 13px;"></i>
-    </form>
   </div>
 </nav>
+
+<!-- Barra de Pesquisa Global (Fora do Menu) -->
+<div class="w-100 bg-dark bg-opacity-10 border-bottom border-secondary border-opacity-10 py-2">
+  <div class="container-xl px-3 position-relative">
+    <form action="/explorer" method="GET" class="position-relative m-0 w-100">
+      <input type="text" name="search" id="globalSearchInput" placeholder="<%= t('search_placeholder') %>"
+        value="<%= typeof search !== 'undefined' ? search : '' %>" class="form-control input-premium w-100"
+        style="padding-left: 2.5rem !important;" autocomplete="off">
+      <i class="bi bi-search position-absolute text-secondary"
+        style="left: 16px; top: 50%; transform: translateY(-50%); font-size: 13px;"></i>
+      <div id="searchSuggestionsDropdown" class="search-suggestions-dropdown d-none"></div>
+    </form>
+  </div>
+</div>
 
 <!-- Modal Criar Pasta (Bootstrap 5) -->
 <div class="modal fade animate" id="createFolderModal" tabindex="-1" aria-labelledby="createFolderModalLabel"
@@ -471,5 +876,738 @@
         }
       });
     });
+  })();
+</script>
+
+<!-- AI Chat Sidebar HTML -->
+<aside class="ai-chat-sidebar" id="aiChatSidebar" aria-hidden="true" role="dialog" aria-label="AI Chat Assistant">
+  <header class="ai-chat-sidebar-header">
+    <div class="ai-chat-sidebar-header-info">
+      <div class="ai-avatar-status">
+        <i class="bi bi-robot text-primary fs-5"></i>
+        <span class="ai-status-indicator online"></span>
+      </div>
+      <div>
+        <span class="text-white fw-bold font-outfit d-block" style="font-size: 14px;"><%= typeof config !== 'undefined' && config.agentName ? config.agentName : 'Assistente Inteligente' %></span>
+        <span class="text-secondary" style="font-size: 10px;"><%= typeof config !== 'undefined' && config.agentModel ? config.agentModel.split('/').pop() : 'Llama-3.1-8B-Instruct' %> via Hugging Face</span>
+      </div>
+    </div>
+    <button class="ai-chat-sidebar-close-btn" id="aiChatSidebarCloseBtn" aria-label="Close AI Chat">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </header>
+
+  <!-- Message area -->
+  <div class="ai-chat-sidebar-messages" id="aiChatSidebarMessages">
+    <div class="ai-message-bubble ai-message-ai">
+      Olá! Eu sou <%= typeof config !== 'undefined' && config.agentName ? config.agentName : 'o assistente de AI' %>. Como posso ajudar você hoje? Fique à vontade para perguntar qualquer coisa.
+    </div>
+  </div>
+
+  <!-- Footer with Input -->
+  <footer class="ai-chat-sidebar-footer">
+    <form class="ai-chat-sidebar-input-form" id="aiChatSidebarForm">
+      <input type="text" id="aiChatSidebarInput" placeholder="Digite sua mensagem..." autocomplete="off" aria-label="Mensagem para AI">
+      <button type="submit" class="ai-chat-sidebar-send-btn" aria-label="Send">
+        <i class="bi bi-send-fill"></i>
+      </button>
+    </form>
+  </footer>
+</aside>
+
+<style>
+  /* Search Suggestions Dropdown Styles */
+  .search-suggestions-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    z-index: 1080; /* Exposes on top of all menu layouts */
+    margin-top: 4px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .suggestion-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #cbd5e1;
+    font-size: 13px;
+    text-decoration: none;
+  }
+
+  .suggestion-item:hover, .suggestion-item.active {
+    background-color: rgba(124, 58, 237, 0.2);
+    color: #ffffff;
+  }
+
+  .suggestion-item .suggestion-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .suggestion-item .suggestion-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex-grow: 1;
+  }
+
+  .suggestion-item .suggestion-path {
+    font-size: 10px;
+    color: #64748b;
+    text-align: right;
+    flex-shrink: 0;
+    margin-left: 0.5rem;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* AI Chat Sidebar Drawer Styles */
+  .ai-chat-sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 400px;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    z-index: 1060;
+    transform: translateX(100%);
+    opacity: 0;
+    visibility: hidden;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+                opacity 0.3s ease, 
+                visibility 0.4s;
+  }
+
+  .ai-chat-sidebar.show {
+    transform: translateX(0);
+    opacity: 1;
+    visibility: visible;
+  }
+
+  @media (max-width: 480px) {
+    .ai-chat-sidebar {
+      width: 100%;
+      border-left: none;
+    }
+  }
+
+  .ai-chat-sidebar-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgba(2, 6, 23, 0.4);
+  }
+
+  .ai-chat-sidebar-header-info {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .ai-avatar-status {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+  }
+
+  .ai-status-indicator {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid #0b0f19;
+  }
+
+  .ai-status-indicator.online {
+    background-color: #27c93f;
+    box-shadow: 0 0 8px #27c93f;
+  }
+
+  .ai-chat-sidebar-close-btn {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    width: 32px;
+    height: 32px;
+  }
+
+  .ai-chat-sidebar-close-btn:hover {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .ai-chat-sidebar-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    scroll-behavior: smooth;
+  }
+
+  .ai-chat-sidebar-messages::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .ai-chat-sidebar-messages::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .ai-chat-sidebar-messages::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 99px;
+  }
+
+  .ai-chat-sidebar-messages::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .ai-message {
+    display: flex;
+    flex-direction: column;
+    max-width: 80%;
+    animation: ai-message-slide-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+
+  @keyframes ai-message-slide-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .ai-message.incoming {
+    align-self: flex-start;
+  }
+
+  .ai-message.outgoing {
+    align-self: flex-end;
+  }
+
+  .ai-msg-bubble {
+    padding: 0.85rem 1.15rem;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+
+  .incoming .ai-msg-bubble {
+    background-color: rgba(255, 255, 255, 0.06);
+    color: #f1f5f9;
+    border-bottom-left-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .outgoing .ai-msg-bubble {
+    background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+    color: white;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 4px 15px rgba(124, 58, 237, 0.25);
+  }
+
+  .ai-message .time {
+    font-size: 10px;
+    color: #475569;
+    margin-top: 0.35rem;
+    margin-left: 0.5rem;
+  }
+
+  .ai-message.outgoing .time {
+    align-self: flex-end;
+    margin-right: 0.5rem;
+    margin-left: 0;
+  }
+
+  .ai-chat-sidebar-footer {
+    padding: 1.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: rgba(2, 6, 23, 0.4);
+  }
+
+  .ai-chat-sidebar-input-form {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background-color: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 0.35rem 0.5rem 0.35rem 1rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .ai-chat-sidebar-input-form:focus-within {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.25);
+  }
+
+  .ai-chat-sidebar-input-form input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 14px;
+    padding: 0.5rem 0;
+  }
+
+  .ai-chat-sidebar-input-form input::placeholder {
+    color: #475569;
+  }
+
+  .ai-chat-sidebar-send-btn {
+    background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .ai-chat-sidebar-send-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(124, 58, 237, 0.4);
+  }
+
+  .ai-chat-sidebar-send-btn:active {
+    transform: scale(0.95);
+  }
+
+  /* Typing indicator styles */
+  .ai-typing-indicator {
+    display: flex;
+    gap: 5px;
+    padding: 0.25rem 0.5rem;
+    align-items: center;
+  }
+
+  .ai-typing-dot {
+    width: 7px;
+    height: 7px;
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    animation: ai-typingBounce 1.4s infinite ease-in-out both;
+  }
+
+  .ai-typing-dot:nth-child(1) { animation-delay: -0.32s; }
+  .ai-typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+  @keyframes ai-typingBounce {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
+  }
+
+  .ai-chat-sidebar pre {
+    background-color: rgba(0, 0, 0, 0.3);
+    padding: 0.8rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    margin-top: 0.5rem;
+  }
+
+  .ai-chat-sidebar code {
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+</style>
+
+<script>
+  (function() {
+    const toggleBtn = document.getElementById('sidebarChatToggleBtn');
+    const sidebar = document.getElementById('aiChatSidebar');
+    const closeBtn = document.getElementById('aiChatSidebarCloseBtn');
+    const form = document.getElementById('aiChatSidebarForm');
+    const input = document.getElementById('aiChatSidebarInput');
+    const messagesContainer = document.getElementById('aiChatSidebarMessages');
+
+    let isOpen = false;
+    let historyLoaded = false;
+
+    function loadHistoryFromAPI() {
+      if (historyLoaded) return;
+      fetch('/api/chat/history')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.history && data.history.length > 0) {
+            messagesContainer.innerHTML = '';
+            data.history.forEach(msg => {
+              // Create message element manually to avoid infinite loop calling appendMessage
+              const messageDiv = document.createElement('div');
+              messageDiv.className = 'ai-message ' + (msg.role === 'user' ? 'outgoing' : 'incoming');
+              
+              const now = msg.timestamp ? new Date(msg.timestamp) : new Date();
+              const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              
+              messageDiv.innerHTML = `
+                <div class="ai-msg-bubble">
+                  ${msg.role === 'user' ? escapeHtml(msg.content) : formatResponse(msg.content)}
+                </div>
+                <span class="time">${timeString}</span>
+              `;
+              messagesContainer.appendChild(messageDiv);
+            });
+            scrollToBottom();
+            historyLoaded = true;
+          }
+        })
+        .catch(err => console.error('Erro ao carregar histórico do chat:', err));
+    }
+
+    if (!toggleBtn || !sidebar) return;
+
+    // Toggle click handler
+    toggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (isOpen) {
+        closeSidebar();
+      } else {
+        openSidebar();
+      }
+    });
+
+    // Close click handler
+    if (closeBtn) {
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeSidebar();
+      });
+    }
+
+    // Close on click outside
+    document.addEventListener('click', (e) => {
+      if (isOpen && !sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+        closeSidebar();
+      }
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        closeSidebar();
+      }
+    });
+
+    function openSidebar() {
+      isOpen = true;
+      sidebar.classList.add('show');
+      sidebar.setAttribute('aria-hidden', 'false');
+      toggleBtn.classList.add('active');
+      loadHistoryFromAPI();
+      setTimeout(() => {
+        if (input) input.focus();
+      }, 300);
+      scrollToBottom();
+    }
+
+    function closeSidebar() {
+      isOpen = false;
+      sidebar.classList.remove('show');
+      sidebar.setAttribute('aria-hidden', 'true');
+      toggleBtn.classList.remove('active');
+    }
+
+    // Form submit handler
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        handleMessageSubmit();
+      });
+    }
+
+    function handleMessageSubmit() {
+      const text = input.value.trim();
+      if (!text) return;
+
+      // Add user message
+      appendMessage('user', text);
+      input.value = '';
+
+      // Show typing indicator
+      showTypingIndicator();
+
+      // Fetch AI response
+      fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      })
+      .then(res => res.json())
+      .then(data => {
+        removeTypingIndicator();
+        if (data.success) {
+          appendMessage('ai', data.response);
+          if (data.refreshTasks && window.location.pathname === '/tasks') {
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          }
+        } else {
+          appendMessage('ai', 'Erro ao obter resposta da AI: ' + data.error);
+        }
+      })
+      .catch(err => {
+        removeTypingIndicator();
+        console.error(err);
+        appendMessage('ai', 'Erro ao conectar ao servidor.');
+      });
+    }
+
+    function appendMessage(sender, text) {
+      const messageDiv = document.createElement('div');
+      messageDiv.classList.add('ai-message');
+      if (sender === 'user') {
+        messageDiv.classList.add('outgoing');
+      } else {
+        messageDiv.classList.add('incoming');
+      }
+
+      const now = new Date();
+      const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      let contentHtml = '';
+      if (sender === 'user') {
+        contentHtml = `
+          <div class="ai-msg-bubble">
+            ${escapeHtml(text)}
+          </div>
+          <span class="time">${timeString}</span>
+        `;
+      } else {
+        contentHtml = `
+          <div class="ai-msg-bubble">
+            ${formatResponse(text)}
+          </div>
+          <span class="time">${timeString}</span>
+        `;
+      }
+
+      messageDiv.innerHTML = contentHtml;
+      messagesContainer.appendChild(messageDiv);
+      scrollToBottom();
+    }
+
+    function showTypingIndicator() {
+      const indicator = document.createElement('div');
+      indicator.classList.add('ai-message', 'incoming');
+      indicator.id = 'aiTypingIndicator';
+      indicator.innerHTML = `
+        <div class="ai-msg-bubble">
+          <div class="ai-typing-indicator">
+            <div class="ai-typing-dot"></div>
+            <div class="ai-typing-dot"></div>
+            <div class="ai-typing-dot"></div>
+          </div>
+        </div>
+      `;
+      messagesContainer.appendChild(indicator);
+      scrollToBottom();
+    }
+
+    function removeTypingIndicator() {
+      const indicator = document.getElementById('aiTypingIndicator');
+      if (indicator) {
+        indicator.remove();
+      }
+    }
+
+    function scrollToBottom() {
+      if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function formatResponse(text) {
+      // Escape basic HTML
+      let formatted = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      // Code blocks
+      formatted = formatted.replace(/```([\s\S]+?)```/g, function(match, code) {
+        return '<pre><code>' + code.trim() + '</code></pre>';
+      });
+
+      // Bold
+      formatted = formatted.replace(/\*\*([\s\S]+?)\*\*/g, '<strong>$1</strong>');
+
+      // New lines
+      formatted = formatted.replace(/\n/g, '<br>');
+
+      return formatted;
+    }
+
+    // Lembrete / Alerta proativo do Chat AI
+    setTimeout(() => {
+      if (sessionStorage.getItem('aiAlertInit') !== 'true') {
+        fetch('/api/tasks/alerts')
+          .then(res => res.json())
+          .then(data => {
+            if (data.showAlert && data.message) {
+              sessionStorage.setItem('aiAlertInit', 'true');
+              
+              // Abrir a sidebar e carregar histórico
+              openSidebar();
+            }
+          })
+          .catch(err => console.error('Erro ao buscar alertas da AI:', err));
+      }
+    }, 2000);
+  })();
+</script>
+
+<script>
+  (function() {
+    const searchInput = document.getElementById('globalSearchInput');
+    const dropdown = document.getElementById('searchSuggestionsDropdown');
+    let debounceTimeout;
+
+    if (!searchInput || !dropdown) return;
+
+    searchInput.addEventListener('input', () => {
+      clearTimeout(debounceTimeout);
+      const query = searchInput.value.trim();
+
+      if (query.length < 2) {
+        dropdown.classList.add('d-none');
+        dropdown.innerHTML = '';
+        return;
+      }
+
+      debounceTimeout = setTimeout(() => {
+        fetch(`/api/search/suggestions?q=${encodeURIComponent(query)}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.success && data.suggestions && data.suggestions.length > 0) {
+               renderSuggestions(data.suggestions);
+            } else {
+               dropdown.classList.add('d-none');
+               dropdown.innerHTML = '';
+            }
+          })
+          .catch(err => {
+            console.error('Error fetching suggestions:', err);
+          });
+      }, 300); // 300ms debounce
+    });
+
+    function renderSuggestions(suggestions) {
+      dropdown.innerHTML = '';
+      suggestions.forEach(item => {
+        const div = document.createElement('a');
+        div.className = 'suggestion-item';
+        
+        let icon = 'bi-file-earmark-fill';
+        let pathUrl = `/explorer?search=${encodeURIComponent(item.name)}`;
+        
+        const ext = item.type;
+        if (['mp4', 'mkv', 'avi', 'mov', 'webm'].includes(ext)) {
+          icon = 'bi-film text-fuchsia-500';
+          pathUrl = `/play?video=${encodeURIComponent(item.path)}`;
+        } else if (['mp3', 'wav', 'ogg', 'aac'].includes(ext)) {
+          icon = 'bi-music-note-beamed text-danger';
+          pathUrl = `/shared/${encodeURIComponent(item.path)}`;
+        } else if (['jpg', 'jpeg', 'png', 'gif', 'svg'].includes(ext)) {
+          icon = 'bi-image text-primary-emphasis';
+          pathUrl = `/shared/${encodeURIComponent(item.path)}`;
+        } else if (ext === 'pdf') {
+          icon = 'bi-file-pdf text-danger';
+          pathUrl = `/shared/${encodeURIComponent(item.path)}`;
+        }
+        
+        div.href = pathUrl;
+        div.innerHTML = `
+          <i class="bi ${icon} suggestion-icon"></i>
+          <span class="suggestion-text">${escapeHtml(item.name)}</span>
+          <span class="suggestion-path">${escapeHtml(item.path.split('/').slice(0, -1).join('/') || '/')}</span>
+        `;
+        
+        dropdown.appendChild(div);
+      });
+      dropdown.classList.remove('d-none');
+    }
+
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.add('d-none');
+      }
+    });
+
+    // Show suggestions if input is focused and contains query
+    searchInput.addEventListener('focus', () => {
+      if (searchInput.value.trim().length >= 2 && dropdown.children.length > 0) {
+        dropdown.classList.remove('d-none');
+      }
+    });
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
   })();
 </script>

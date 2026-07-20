@@ -101,10 +101,10 @@
       <% } else { %>
         <div class="row g-4">
           <% cameras.forEach((camera, index) => { %>
-            <div class="col-12 col-md-6">
-              <div class="card card-premium aspect-ratio ratio ratio-16x9 border-0 rounded-3 overflow-hidden scanline scanline-bar shadow-lg position-relative" style="background-color: #000 !important;">
+            <div class="col-12 col-md-6 mb-4">
+              <div class="card card-premium border-0 rounded-3 overflow-hidden scanline scanline-bar shadow-lg position-relative" style="background-color: #000 !important; width: 100%; aspect-ratio: 16/9; min-height: 280px; max-width: 640px; margin: 0 auto;">
                 <!-- Overlay Superior: REC + Clock -->
-                <div class="position-absolute top-0 start-0 end-0 d-flex justify-content-between align-items-center z-3 p-3 text-white select-none">
+                <div class="position-absolute top-0 start-0 end-0 d-flex justify-content-between align-items-center p-3 text-white select-none" style="pointer-events: none; z-index: 15;">
                   <div class="d-flex align-items-center gap-2 bg-dark bg-opacity-75 px-2.5 py-1 rounded border border-secondary border-opacity-10" style="backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);">
                     <span class="pulse-indicator m-0"></span>
                     <span class="text-danger small fw-bold tracking-wider">LIVE</span>
@@ -114,22 +114,24 @@
                   </div>
                 </div>
 
-                <!-- Simulação de Vídeo (Estética Cyberpunk) -->
-                <div class="d-flex flex-column align-items-center justify-content-center bg-black bg-opacity-50 text-center p-4 h-100 w-100">
-                  <!-- Ruído estático mockado com SVG/CSS -->
+                <!-- Video Element -->
+                <video id="video-<%= index %>" class="w-100 h-100 d-none position-absolute start-0 top-0" autoplay muted playsinline controls style="object-fit: contain; background: #000; z-index: 5;"></video>
+                
+                <!-- Loader Placeholder -->
+                <div id="loader-<%= index %>" class="d-flex flex-column align-items-center justify-content-center text-center p-4 position-absolute start-0 top-0 w-100 h-100" style="background: #000; z-index: 10;">
                   <div class="position-absolute inset-0 opacity-10 bg-repeat bg-center" style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%224%22 height=%224%22 viewBox=%220 0 4 4%22%3E%3Cpath fill=%22%23ffffff%22 opacity=%22.5%22 d=%22M1 0h1v1H1zm2 2h1v1H3zm-2 1h1v1H1z%22/%3E%3C/svg%3E');"></div>
-                  <i class="bi bi-camera-video text-secondary text-opacity-25 mb-2" style="font-size: 3rem;"></i>
-                  <div class="small font-mono text-secondary fw-semibold">STREAM FEED #<%= index + 1 %></div>
+                  <div class="spinner-border text-primary mb-3" role="status" style="width: 2rem; height: 2rem;"></div>
+                  <div class="small font-mono text-secondary fw-semibold">CONECTANDO FEED #<%= index + 1 %></div>
                   <div class="font-mono text-secondary mt-1 text-truncate max-w-75" style="font-size: 11px;"><%= camera.url %></div>
                 </div>
 
                 <!-- Overlay Inferior: Nome da Câmera -->
-                <div class="position-absolute bottom-0 start-0 m-3 z-3 bg-dark bg-opacity-75 px-3 py-1.5 rounded-3 border border-secondary border-opacity-10 text-white font-outfit" style="backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); font-size: 13px;">
+                <div class="position-absolute bottom-0 start-0 m-3 bg-dark bg-opacity-75 px-3 py-1.5 rounded-3 border border-secondary border-opacity-10 text-white font-outfit" style="backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); font-size: 13px; z-index: 15;">
                   <%= camera.name %>
                 </div>
               </div>
             </div>
-          <% }) %>
+          <% }); %>
         </div>
       <% } %>
 
@@ -236,6 +238,9 @@
     </div>
   </div>
 
+  <!-- HLS.js Library -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.10/dist/hls.min.js"></script>
+
   <!-- JS assets -->
   <script src="/js/bootstrap.bundle.min.js"></script>
   <script src="/js/sweetalert2.all.min.js"></script>
@@ -243,6 +248,54 @@
   <script src="/js/scripts.js"></script>
 
   <script>
+    // Envio de logs do navegador para o servidor (Depuração remota)
+    (function() {
+      function sendLog(type, data) {
+        fetch('/log-client', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type, timestamp: new Date().toISOString(), data })
+        }).catch(() => {});
+      }
+
+      window.onerror = function(message, source, lineno, colno, error) {
+        sendLog('error', { message, source, lineno, colno, stack: error ? error.stack : null });
+      };
+
+      window.addEventListener('unhandledrejection', function(event) {
+        sendLog('promise-rejection', { reason: event.reason ? (event.reason.stack || String(event.reason)) : 'No reason' });
+      });
+
+      const safeStringify = (val) => {
+        if (typeof val === 'object' && val !== null) {
+          try {
+            return JSON.stringify(val);
+          } catch (e) {
+            return `[Unserializable: ${e.message}]`;
+          }
+        }
+        return String(val);
+      };
+
+      const originalLog = console.log;
+      console.log = function(...args) {
+        originalLog.apply(console, args);
+        sendLog('log', args.map(safeStringify));
+      };
+
+      const originalWarn = console.warn;
+      console.warn = function(...args) {
+        originalWarn.apply(console, args);
+        sendLog('warn', args.map(safeStringify));
+      };
+
+      const originalError = console.error;
+      console.error = function(...args) {
+        originalError.apply(console, args);
+        sendLog('error-console', args.map(safeStringify));
+      };
+    })();
+
     // Controle do Modal
     function toggleAddCamModal() {
       const modalEl = document.getElementById('addCameraModal');
@@ -269,6 +322,147 @@
       }
       setInterval(updateClocks, 1000);
       updateClocks();
+
+      // Transcodificação dinâmica e streaming de câmera RTSP para HLS
+      const cameras = <%- JSON.stringify(cameras) %>;
+      const activeHearbeats = {};
+
+      function updateLoaderStatus(loaderEl, text, isError = false) {
+        if (!loaderEl) return;
+        const spinner = loaderEl.querySelector('.spinner-border');
+        const statusTextEl = loaderEl.querySelector('.fw-semibold');
+        if (statusTextEl) {
+          statusTextEl.textContent = text;
+          if (isError) {
+            statusTextEl.className = "small font-mono text-danger fw-semibold";
+          }
+        }
+        if (isError && spinner) {
+          spinner.remove();
+        }
+      }
+
+      function startCameraStream(camera, index) {
+        const videoEl = document.getElementById(`video-${index}`);
+        const loaderEl = document.getElementById(`loader-${index}`);
+
+        if (typeof Hls === 'undefined') {
+          updateLoaderStatus(loaderEl, "ERRO: BIBLIOTECA HLS.JS NÃO CARREGADA", true);
+          return;
+        }
+
+        updateLoaderStatus(loaderEl, "SOLICITANDO CANAL AO SERVIDOR...");
+        
+        fetch(`/stream-camera?url=${encodeURIComponent(camera.url)}&_=${Date.now()}`)
+          .then(res => {
+            if (!res.ok) {
+              throw new Error(`HTTP error! status: ${res.status}`);
+            }
+            return res.json();
+          })
+          .then(data => {
+            if (data.success) {
+              const streamUrl = data.url;
+              const hash = data.hash;
+
+              updateLoaderStatus(loaderEl, "INICIANDO BUFFER DE VÍDEO HLS...");
+
+              // Inicia heartbeat para manter transcodificação viva
+              activeHearbeats[hash] = setInterval(() => {
+                fetch('/stream-camera/heartbeat', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ hash })
+                }).catch(err => console.error("Erro no heartbeat da câmera:", err));
+              }, 10000);
+
+              // Ouvir múltiplos eventos para garantir a exibição do elemento de vídeo
+              const showVideo = () => {
+                console.log(`[CLIENT-DEBUG] Câmera #${index + 1} carregada com sucesso! Exibindo vídeo.`);
+                videoEl.classList.remove('d-none');
+                loaderEl.classList.add('d-none');
+              };
+              videoEl.addEventListener('loadeddata', showVideo);
+              videoEl.addEventListener('playing', showVideo);
+              videoEl.addEventListener('error', (e) => {
+                console.error(`[CLIENT-DEBUG] Erro no elemento video para a Câmera #${index + 1}:`, e);
+              });
+
+              // Garante que o elemento de vídeo esteja silenciado para permitir autoplay em todos os navegadores
+              videoEl.muted = true;
+
+              // Inicialização do Player HLS
+              if (Hls.isSupported()) {
+                const hls = new Hls({
+                  manifestLoadingTimeOut: 20000,
+                  manifestLoadingMaxRetry: 5
+                });
+                
+                hls.on(Hls.Events.MANIFEST_LOADED, function(event, data) {
+                  console.log(`[CLIENT-DEBUG] Manifesto carregado com sucesso para a Câmera #${index + 1}`);
+                });
+                hls.on(Hls.Events.LEVEL_LOADED, function(event, data) {
+                  console.log(`[CLIENT-DEBUG] Nível HLS carregado para a Câmera #${index + 1}`);
+                });
+                hls.on(Hls.Events.FRAG_BUFFERED, function(event, data) {
+                  console.log(`[CLIENT-DEBUG] Fragmento ${data.frag.sn} bufferizado para a Câmera #${index + 1}`);
+                });
+
+                hls.loadSource(streamUrl);
+                hls.attachMedia(videoEl);
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                  console.log(`[CLIENT-DEBUG] Manifesto analisado (MANIFEST_PARSED) para a Câmera #${index + 1}`);
+                  videoEl.play().catch(e => {
+                    console.log("Autoplay bloqueado pelo navegador, aguardando clique do usuário:", e);
+                  });
+                });
+                hls.on(Hls.Events.ERROR, function(event, dataError) {
+                  console.warn("HLS.js Warning/Error:", dataError);
+                  if (dataError.fatal) {
+                    switch (dataError.type) {
+                      case Hls.ErrorTypes.NETWORK_ERROR:
+                        updateLoaderStatus(loaderEl, "ERRO DE REDE: TENTANDO RECONECTAR...");
+                        hls.startLoad();
+                        break;
+                      case Hls.ErrorTypes.MEDIA_ERROR:
+                        updateLoaderStatus(loaderEl, "ERRO DE MÍDIA: RECOMPONDO FLUXO...");
+                        hls.recoverMediaError();
+                        break;
+                      default:
+                        updateLoaderStatus(loaderEl, "ERRO CRÍTICO NA REPRODUÇÃO", true);
+                        hls.destroy();
+                        break;
+                    }
+                  }
+                });
+              } else if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
+                // Suporte nativo Safari/iOS
+                videoEl.src = streamUrl;
+                videoEl.play().catch(e => {
+                  console.log("Autoplay bloqueado pelo Safari:", e);
+                });
+              } else {
+                updateLoaderStatus(loaderEl, "ERRO: NAVEGADOR NÃO SUPORTA HLS", true);
+              }
+            } else {
+              updateLoaderStatus(loaderEl, `ERRO: ${data.error || "NÃO FOI POSSÍVEL CONECTAR"}`, true);
+            }
+          })
+          .catch(err => {
+            console.error("Erro ao iniciar stream:", err);
+            updateLoaderStatus(loaderEl, "FALHA NA CONEXÃO COM O SERVIDOR", true);
+          });
+      }
+
+      // Iniciar streams para todas as câmeras cadastradas
+      cameras.forEach((camera, index) => {
+        startCameraStream(camera, index);
+      });
+
+      // Limpar todos os timers de heartbeat ao sair da página
+      window.addEventListener('beforeunload', () => {
+        Object.values(activeHearbeats).forEach(id => clearInterval(id));
+      });
     <% } %>
 
     // Monitoramento do Input de Upload (para compatibilidade com header)

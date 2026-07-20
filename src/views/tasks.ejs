@@ -1,0 +1,1749 @@
+<!DOCTYPE html>
+<html lang="<%= currentLang %>">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= t('tasks') %> - Black Bird Media Center</title>
+  <style>
+    /* Kanban Board Layout & Glassmorphism Styles */
+    .kanban-board {
+      display: flex;
+      gap: 1.25rem;
+      overflow-x: auto;
+      padding: 0.5rem 0;
+      min-height: 70vh;
+    }
+    
+    .kanban-column {
+      flex: 1;
+      min-width: 290px;
+      max-width: 360px;
+      background: rgba(15, 23, 42, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      max-height: 72vh;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+    }
+    
+    .kanban-column-header {
+      padding: 1.1rem 1.25rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(2, 6, 23, 0.2);
+      border-top-left-radius: 16px;
+      border-top-right-radius: 16px;
+    }
+    
+    .kanban-column-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #ffffff;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .card-count-badge {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #94a3b8;
+      font-size: 11px;
+      padding: 0.15rem 0.45rem;
+      border-radius: 99px;
+    }
+    
+    .kanban-cards {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      min-height: 150px;
+    }
+    
+    .kanban-cards::-webkit-scrollbar {
+      width: 4px;
+    }
+    .kanban-cards::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 2px;
+    }
+    
+    .kanban-card {
+      background: rgba(30, 41, 59, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 1rem;
+      cursor: grab;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    
+    .kanban-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(124, 58, 237, 0.3);
+      box-shadow: 0 8px 20px rgba(124, 58, 237, 0.15);
+      background: rgba(30, 41, 59, 0.6);
+    }
+    
+    .kanban-card:active {
+      cursor: grabbing;
+    }
+    
+    .kanban-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+    
+    .kanban-card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #ffffff;
+      margin: 0;
+      line-height: 1.4;
+    }
+    
+    .kanban-card-desc {
+      font-size: 12px;
+      color: #94a3b8;
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      line-height: 1.4;
+    }
+    
+    .kanban-card-category {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #a78bfa;
+    }
+    
+    .kanban-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.25rem;
+    }
+    
+    .kanban-card-labels {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+    }
+    
+    .label-badge {
+      font-size: 9px;
+      font-weight: 600;
+      padding: 0.15rem 0.35rem;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    /* Predefined label colors */
+    .label-red { background-color: rgba(239, 68, 68, 0.15); color: #f87171; border-color: rgba(239, 68, 68, 0.25); }
+    .label-blue { background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border-color: rgba(59, 130, 246, 0.25); }
+    .label-green { background-color: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.25); }
+    .label-yellow { background-color: rgba(245, 158, 11, 0.15); color: #fbbf24; border-color: rgba(245, 158, 11, 0.25); }
+    .label-purple { background-color: rgba(139, 92, 246, 0.15); color: #a78bfa; border-color: rgba(139, 92, 246, 0.25); }
+    .label-default { background-color: rgba(148, 163, 184, 0.15); color: #cbd5e1; border-color: rgba(148, 163, 184, 0.25); }
+    
+    .btn-card-action {
+      background: none;
+      border: none;
+      color: #64748b;
+      padding: 0.15rem;
+      cursor: pointer;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-card-action:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .dragging {
+      opacity: 0.3;
+      border: 1px dashed #7c3aed !important;
+      transform: scale(0.95);
+    }
+    
+    /* Drag over placeholder effect */
+    .kanban-cards.drag-over {
+      background: rgba(124, 58, 237, 0.05);
+      border-radius: 12px;
+      outline: 2px dashed rgba(124, 58, 237, 0.2);
+    }
+
+    /* Project List Premium Transitions */
+    .hover-border-primary {
+      transition: all 0.2s ease;
+    }
+    .hover-border-primary:hover {
+      border-color: rgba(124, 58, 237, 0.4) !important;
+      box-shadow: 0 10px 30px rgba(124, 58, 237, 0.15) !important;
+    }
+    .hover-translate-y {
+      transition: transform 0.2s ease;
+    }
+    .hover-translate-y:hover {
+      transform: translateY(-4px);
+    }
+    .hover-bg-dark:hover {
+      background: rgba(15, 23, 42, 0.6) !important;
+    }
+  </style>
+</head>
+
+<body class="bg-dark text-light min-vh-screen">
+
+  <%- include('header') %>
+
+  <!-- Modal de Upload (Necessário por estar no header.ejs) -->
+  <div class="modal fade animate" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-content-premium border-0">
+        <div class="modal-header modal-header-premium border-0">
+          <h5 class="modal-title font-outfit fw-bold text-white" id="uploadModalLabel">Upload de Arquivos</h5>
+          <button type="button" class="btn-close btn-close-white" onclick="toggleUploadModal()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <input type="hidden" id="currentPath" value="">
+          <label class="d-flex flex-column align-items-center justify-content-center w-100 border border-secondary border-dashed rounded-3 cursor-pointer p-4 bg-dark bg-opacity-25 hover-bg-dark transition-all-200 select-files-box" style="height: 176px; border-style: dashed !important; border-width: 2px !important; border-color: rgba(255,255,255,0.1) !important;">
+            <div class="d-flex flex-column align-items-center justify-content-center text-center">
+              <i class="bi bi-cloud-arrow-up text-secondary fs-1 mb-2 upload-icon"></i>
+              <p class="mb-1 text-light fw-bold small">Selecione arquivos para upload</p>
+              <p class="text-secondary small mb-0" style="font-size: 11px;">Mídia enviada ficará disponível na raiz</p>
+            </div>
+            <input type="file" id="fileInput" class="d-none" multiple>
+          </label>
+        </div>
+        <div class="modal-footer modal-footer-premium border-0">
+          <button type="button" class="btn btn-premium-secondary" onclick="toggleUploadModal()">Cancelar</button>
+          <button type="button" class="btn btn-premium-primary border-0" id="uploadFilesBtn">Enviar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Criar Pasta (Necessário por estar no header.ejs) -->
+  <div class="modal fade animate" id="createFolderModal" tabindex="-1" aria-labelledby="createFolderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-content-premium border-0">
+        <div class="modal-header modal-header-premium border-0">
+          <h5 class="modal-title font-outfit fw-bold text-white" id="createFolderModalLabel"><%= t('create_folder') %></h5>
+          <button type="button" class="btn-close btn-close-white" onclick="toggleCreateFolderModal()" aria-label="Close"></button>
+        </div>
+        <form action="/create-dir" method="POST" class="m-0">
+          <div class="modal-body p-4">
+            <input type="hidden" name="path" id="createFolderPathInput" value="">
+            <div class="mb-3">
+              <label for="dirNameInput" class="form-label text-uppercase text-secondary fw-semibold small tracking-wider mb-2"><%= t('folder_name') %></label>
+              <input type="text" id="dirNameInput" name="dirName" placeholder="Ex: Pasta Nova" required class="form-control input-premium">
+            </div>
+          </div>
+          <div class="modal-footer modal-footer-premium border-0">
+            <button type="button" class="btn btn-premium-secondary" onclick="toggleCreateFolderModal()"><%= t('cancel') %></button>
+            <button type="submit" class="btn btn-premium-primary border-0"><%= t('create') %></button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTAINER PRINCIPAL -->
+  <div class="container-xl py-5 px-3">
+    
+    <!-- SEÇÃO 1: LISTA DE PROJETOS -->
+    <div id="projectsListView" class="d-none">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+          <h2 class="fs-3 fw-bold text-white font-outfit m-0">
+            <i class="bi bi-folder-fill text-info me-2"></i>Meus Projetos
+          </h2>
+          <p class="text-secondary small m-0 mt-1">
+            Selecione um projeto para abrir e gerenciar seu respectivo quadro Kanban.
+          </p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-premium-secondary border-0 d-flex align-items-center gap-2" onclick="triggerKanbanImport()">
+            <i class="bi bi-upload"></i>
+            <span>Importar Backup</span>
+          </button>
+          <input type="file" id="kanbanDirectImportInput" accept=".zip" class="d-none" onchange="handleKanbanDirectImport(event)">
+
+          <a href="/api/tasks/backup/export" class="btn btn-premium-secondary border-0 d-flex align-items-center gap-2 text-decoration-none">
+            <i class="bi bi-download"></i>
+            <span>Exportar Backup</span>
+          </a>
+
+          <button class="btn btn-premium-primary border-0 d-flex align-items-center gap-2" onclick="openCreateProjectModal()">
+            <i class="bi bi-folder-plus"></i>
+            <span>Novo Projeto</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Grid de Projetos -->
+      <div class="row g-4" id="projectsGrid">
+        <!-- Injetado por JS -->
+      </div>
+    </div>
+
+    <!-- SEÇÃO 2: KANBAN BOARD -->
+    <div id="kanbanBoardView" class="d-none">
+      <!-- Cabeçalho do Quadro -->
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <a href="/tasks" class="btn btn-premium-secondary btn-sm py-1 px-2 d-inline-flex align-items-center gap-1.5" style="font-size: 11px;">
+              <i class="bi bi-arrow-left"></i>
+              <span>Voltar aos Projetos</span>
+            </a>
+            <span class="text-secondary">/</span>
+            <span class="text-fuchsia-500 fw-bold font-outfit text-uppercase" style="font-size: 11px; letter-spacing: 0.5px;">Quadro Kanban</span>
+          </div>
+          <h2 class="fs-3 fw-bold text-white font-outfit m-0" id="activeProjectName">
+            Nome do Projeto
+          </h2>
+          <p class="text-secondary small m-0 mt-1" id="activeProjectDesc">
+            Descrição do projeto...
+          </p>
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-premium-secondary border-0 d-flex align-items-center gap-2 text-danger" onclick="deleteActiveProject()">
+            <i class="bi bi-trash"></i>
+            <span>Excluir Projeto</span>
+          </button>
+          <button class="btn btn-premium-primary border-0 d-flex align-items-center gap-2" onclick="openCreateCardModal()">
+            <i class="bi bi-plus-lg"></i>
+            <span>Adicionar Cartão</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Filtros de Busca e Categorias -->
+      <div class="mb-4 p-3 rounded-3 border border-secondary border-opacity-10 d-flex flex-wrap gap-3 align-items-center" style="background-color: rgba(15, 23, 42, 0.3); backdrop-filter: blur(12px);">
+        <div class="position-relative m-0 flex-fill" style="max-width: 320px;">
+          <input type="text" id="boardSearchInput" placeholder="Filtrar cartões..." class="form-control input-premium w-100 py-1.5" style="padding-left: 2.2rem !important;" oninput="applyFilters()">
+          <i class="bi bi-funnel position-absolute text-secondary" style="left: 12px; top: 50%; transform: translateY(-50%); font-size: 13px;"></i>
+        </div>
+        
+        <div style="max-width: 200px; width: 100%;">
+          <select id="boardCategoryFilter" class="form-select form-control input-premium py-1.5 pe-5" style="background-color: rgba(15, 23, 42, 0.45);" onchange="applyFilters()">
+            <option value="">Todas Categorias</option>
+          </select>
+        </div>
+
+        <div style="max-width: 200px; width: 100%;">
+          <select id="boardLabelFilter" class="form-select form-control input-premium py-1.5 pe-5" style="background-color: rgba(15, 23, 42, 0.45);" onchange="applyFilters()">
+            <option value="">Todas Etiquetas</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- QUADRO KANBAN -->
+      <div class="kanban-board">
+        
+        <!-- Coluna: To Do -->
+        <div class="kanban-column" id="col-todo">
+          <div class="kanban-column-header">
+            <h4 class="kanban-column-title">
+              <i class="bi bi-circle text-secondary fs-6"></i>
+              <span>To Do</span>
+            </h4>
+            <span class="card-count-badge" id="count-todo">0</span>
+          </div>
+          <div class="kanban-cards" id="cards-todo" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" ondrop="drop(event, 'todo')">
+            <!-- Cartões gerados por JS -->
+          </div>
+        </div>
+
+        <!-- Coluna: Doing -->
+        <div class="kanban-column" id="col-doing">
+          <div class="kanban-column-header">
+            <h4 class="kanban-column-title">
+              <i class="bi bi-play-circle text-info fs-6"></i>
+              <span>Doing</span>
+            </h4>
+            <span class="card-count-badge" id="count-doing">0</span>
+          </div>
+          <div class="kanban-cards" id="cards-doing" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" ondrop="drop(event, 'doing')">
+            <!-- Cartões gerados por JS -->
+          </div>
+        </div>
+
+        <!-- Coluna: Validation -->
+        <div class="kanban-column" id="col-validation">
+          <div class="kanban-column-header">
+            <h4 class="kanban-column-title">
+              <i class="bi bi-check2-circle text-warning fs-6"></i>
+              <span>Validation</span>
+            </h4>
+            <span class="card-count-badge" id="count-validation">0</span>
+          </div>
+          <div class="kanban-cards" id="cards-validation" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" ondrop="drop(event, 'validation')">
+            <!-- Cartões gerados por JS -->
+          </div>
+        </div>
+
+        <!-- Coluna: Done -->
+        <div class="kanban-column" id="col-done">
+          <div class="kanban-column-header">
+            <h4 class="kanban-column-title">
+              <i class="bi bi-check-circle-fill text-success fs-6"></i>
+              <span>Done</span>
+            </h4>
+            <span class="card-count-badge" id="count-done">0</span>
+          </div>
+          <div class="kanban-cards" id="cards-done" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" ondrop="drop(event, 'done')">
+            <!-- Cartões gerados por JS -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODAL: ADICIONAR / EDITAR PROJETO -->
+  <div class="modal fade animate" id="projectModal" tabindex="-1" aria-labelledby="projectModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-content-premium border-0">
+        <div class="modal-header modal-header-premium border-0">
+          <h5 class="modal-title font-outfit fw-bold text-white" id="projectModalLabel">Adicionar Novo Projeto</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        
+        <form id="projectForm" class="m-0" onsubmit="saveProjectSubmit(event)">
+          <div class="modal-body p-4">
+            <div class="mb-3">
+              <label for="projectNameInput" class="form-label text-secondary small fw-semibold text-uppercase tracking-wider mb-2">Nome do Projeto</label>
+              <input type="text" id="projectNameInput" required placeholder="Ex: Media Center App" class="form-control input-premium">
+            </div>
+
+            <div class="mb-3">
+              <label for="projectDescInput" class="form-label text-secondary small fw-semibold text-uppercase tracking-wider mb-2">Descrição</label>
+              <textarea id="projectDescInput" rows="3" placeholder="Detalhes e objetivos do projeto..." class="form-control input-premium"></textarea>
+            </div>
+          </div>
+          
+          <div class="modal-footer modal-footer-premium border-0">
+            <button type="button" class="btn btn-premium-secondary" data-bs-dismiss="modal"><%= t('cancel') %></button>
+            <button type="submit" class="btn btn-premium-primary border-0">Criar Projeto</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CRIAR / EDITAR CARTÃO -->
+  <div class="modal fade animate" id="taskCardModal" tabindex="-1" aria-labelledby="taskCardModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-content-premium border-0">
+        <div class="modal-header modal-header-premium border-0">
+          <h5 class="modal-title font-outfit fw-bold text-white" id="taskCardModalLabel">Adicionar Cartão</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        
+        <form id="taskCardForm" class="m-0" onsubmit="saveCardSubmit(event)">
+          <div class="modal-body p-4">
+            <input type="hidden" id="cardIdInput">
+            <input type="hidden" id="cardColumnInput" value="todo">
+            
+            <div class="mb-3">
+              <label for="cardTitleInput" class="form-label text-secondary small fw-semibold text-uppercase tracking-wider mb-2">Título do Cartão</label>
+              <input type="text" id="cardTitleInput" required placeholder="Ex: Revisar PRD de Segurança" class="form-control input-premium">
+            </div>
+
+            <div class="mb-3">
+              <label for="cardDescInput" class="form-label text-secondary small fw-semibold text-uppercase tracking-wider mb-2">Descrição</label>
+              <textarea id="cardDescInput" rows="3" placeholder="Detalhes da tarefa..." class="form-control input-premium"></textarea>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label for="cardCategoryInput" class="form-label text-secondary small fw-semibold text-uppercase tracking-wider mb-2">Categoria</label>
+                <input type="text" id="cardCategoryInput" placeholder="Ex: Dev, Bugs, Infra" class="form-control input-premium">
+              </div>
+              
+              <div class="col-md-6">
+                <label for="cardLabelColorSelect" class="form-label text-secondary small fw-semibold text-uppercase tracking-wider mb-2">Cor da Etiqueta</label>
+                <select id="cardLabelColorSelect" class="form-select form-control input-premium pe-5" style="background-color: rgba(15, 23, 42, 0.45);">
+                  <option value="default">Cinza (Padrão)</option>
+                  <option value="red">Vermelho (Urgente)</option>
+                  <option value="blue">Azul (Trabalho)</option>
+                  <option value="green">Verde (Fácil)</option>
+                  <option value="yellow">Amarelo (Médio)</option>
+                  <option value="purple">Roxo (Idéia)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="cardDueDateInput" class="form-label text-secondary small fw-semibold text-uppercase tracking-wider mb-2">Data de Vencimento (Due Date)</label>
+              <input type="date" id="cardDueDateInput" class="form-control input-premium">
+            </div>
+
+            <div class="mb-3">
+              <label for="cardLabelsInput" class="form-label text-secondary small fw-semibold text-uppercase tracking-wider mb-2">Etiquetas / Labels (Separados por vírgula)</label>
+              <input type="text" id="cardLabelsInput" placeholder="Ex: Urgente, Frontend, API" class="form-control input-premium">
+              <p class="text-secondary" style="font-size: 10px; margin-top: 6px;">Adicione uma ou mais palavras-chave separadas por vírgula.</p>
+            </div>
+          </div>
+          
+          <div class="modal-footer modal-footer-premium border-0">
+            <button type="button" class="btn btn-premium-secondary" data-bs-dismiss="modal"><%= t('cancel') %></button>
+            <button type="submit" class="btn btn-premium-primary border-0" id="btnSaveCard">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Detalhes e Comentários da Tarefa -->
+  <div class="modal fade animate" id="taskDetailsModal" tabindex="-1" aria-labelledby="taskDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content modal-content-premium border-0" style="background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1) !important;">
+        <div class="modal-header modal-header-premium border-0 pb-0 d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-2">
+            <h5 class="modal-title text-white fw-bold font-outfit" id="taskDetailsTitle">Detalhes da Tarefa</h5>
+            <a href="#" id="editTaskFullScreenBtn" class="btn btn-premium-secondary btn-sm py-1 px-2 font-outfit text-decoration-none" style="font-size: 11px; border-radius: 8px;">
+              <i class="bi bi-window-fullscreen me-1 text-info"></i>Editar (Nova Tela)
+            </a>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4 pt-3">
+          <div class="row g-4">
+            <!-- Coluna Detalhes -->
+            <div class="col-md-6 border-end border-secondary border-opacity-20 pe-md-4">
+              <div class="mb-4">
+                <span class="text-secondary small fw-semibold text-uppercase tracking-wider" style="font-size: 11px;">Descrição</span>
+                <p id="taskDetailsDesc" class="text-white mt-2 small bg-dark bg-opacity-40 p-3 rounded border border-secondary border-opacity-10" style="min-height: 100px; white-space: pre-wrap; line-height: 1.5; color: #cbd5e1 !important;"></p>
+              </div>
+              <div class="row g-3">
+                <div class="col-6">
+                  <span class="text-secondary small fw-semibold text-uppercase tracking-wider" style="font-size: 11px;">Categoria</span>
+                  <div id="taskDetailsCategory" class="text-white mt-1.5 small"></div>
+                </div>
+                <div class="col-6">
+                  <span class="text-secondary small fw-semibold text-uppercase tracking-wider" style="font-size: 11px;">Vencimento</span>
+                  <div id="taskDetailsDueDate" class="text-white mt-1.5 small"></div>
+                </div>
+              </div>
+              <div class="mt-4">
+                <span class="text-secondary small fw-semibold text-uppercase tracking-wider" style="font-size: 11px;">Etiquetas</span>
+                <div id="taskDetailsLabels" class="mt-2 d-flex flex-wrap gap-1.5"></div>
+              </div>
+            </div>
+            
+            <!-- Coluna Comentários -->
+            <div class="col-md-6 d-flex flex-column ps-md-4" style="max-height: 420px;">
+              <span class="text-secondary small fw-semibold text-uppercase tracking-wider mb-2.5" style="font-size: 11px;">Comentários / Feedback</span>
+              
+              <!-- Lista de Comentários -->
+              <div id="taskCommentsList" class="flex-fill overflow-y-auto mb-3 pe-1" style="min-height: 200px; max-height: 250px;">
+                <!-- Preenchido dinamicamente -->
+              </div>
+              
+              <!-- Adicionar Comentário -->
+              <form id="addCommentForm" class="mt-auto">
+                <input type="hidden" id="commentTaskIdInput">
+                <div class="input-group mb-2">
+                  <input type="text" id="newCommentTextInput" placeholder="Escreva um comentário..." class="form-control input-premium border-end-0 py-2.5" required style="border-top-left-radius: 8px; border-bottom-left-radius: 8px;">
+                  <button type="button" class="btn btn-premium-secondary border-start-0 border-end-0 px-3" onclick="triggerCommentAttachment()" title="Anexar Imagem/Vídeo">
+                    <i class="bi bi-paperclip text-secondary"></i>
+                  </button>
+                  <button type="submit" class="btn btn-premium-primary border-start-0 px-3.5" style="border-top-right-radius: 8px; border-bottom-right-radius: 8px;" id="sendCommentBtn">
+                    <i class="bi bi-send-fill text-white"></i>
+                  </button>
+                </div>
+                <input type="file" id="commentAttachmentInput" accept="image/*,video/*" multiple class="d-none" onchange="handleCommentAttachmentSelect(event)">
+                <div id="commentAttachmentsPreview" class="d-flex flex-wrap gap-1.5 small mb-2 d-none"></div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/sweetalert2.all.min.js"></script>
+
+  <script>
+    // Importamos os dados de tarefas passados pelo Express EJS
+    let boardData = <%- JSON.stringify(tasksData) %>;
+    
+    // Ler ID do projeto ativo dos parâmetros da URL
+    const urlParams = new URLSearchParams(window.location.search);
+    let activeProjectId = urlParams.get('project');
+
+    // Elementos do DOM
+    const projectsListView = document.getElementById('projectsListView');
+    const kanbanBoardView = document.getElementById('kanbanBoardView');
+    const projectsGrid = document.getElementById('projectsGrid');
+
+    const cardsContainers = {
+      todo: document.getElementById('cards-todo'),
+      doing: document.getElementById('cards-doing'),
+      validation: document.getElementById('cards-validation'),
+      done: document.getElementById('cards-done')
+    };
+
+    const countBadges = {
+      todo: document.getElementById('count-todo'),
+      doing: document.getElementById('count-doing'),
+      validation: document.getElementById('count-validation'),
+      done: document.getElementById('count-done')
+    };
+
+    let currentOpenCardId = null;
+
+    function showCardDetailsModal(cardId) {
+      currentOpenCardId = cardId;
+      const project = boardData.projects[activeProjectId];
+      if (!project) return;
+      
+      let card = null;
+      Object.keys(project.columns).forEach(colId => {
+        const found = project.columns[colId].cards.find(c => c.id === cardId);
+        if (found) card = found;
+      });
+      
+      if (!card) return;
+      
+      document.getElementById('commentTaskIdInput').value = cardId;
+      document.getElementById('taskDetailsTitle').textContent = card.title;
+      const fullScreenBtn = document.getElementById('editTaskFullScreenBtn');
+      if (fullScreenBtn) {
+        fullScreenBtn.href = `/tasks/edit/${cardId}`;
+      }
+      document.getElementById('taskDetailsDesc').textContent = card.description || 'Sem descrição cadastrada.';
+      document.getElementById('taskDetailsCategory').innerHTML = `<span class="badge bg-secondary bg-opacity-20 text-white border border-secondary border-opacity-30 px-2.5 py-1" style="font-size: 11px;">${escapeHtml(card.category || 'Nenhuma')}</span>`;
+      
+      // Due Date formatting
+      if (card.dueDate) {
+        const parts = card.dueDate.split('-');
+        const formatted = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : card.dueDate;
+        document.getElementById('taskDetailsDueDate').innerHTML = `<span class="text-info font-outfit" style="font-size: 12px;"><i class="bi bi-calendar-event me-1 text-warning"></i>${formatted}</span>`;
+      } else {
+        document.getElementById('taskDetailsDueDate').innerHTML = `<span class="text-secondary small font-outfit">Sem vencimento</span>`;
+      }
+      
+      // Labels
+      const labelsContainer = document.getElementById('taskDetailsLabels');
+      labelsContainer.innerHTML = '';
+      const colorClass = card.labelColor || 'default';
+      if (card.labels && card.labels.length > 0) {
+        card.labels.forEach(lbl => {
+          labelsContainer.innerHTML += `<span class="label-badge label-${colorClass}">${escapeHtml(lbl.trim())}</span>`;
+        });
+      } else {
+        labelsContainer.innerHTML = '<span class="text-secondary small font-outfit">Nenhuma etiqueta</span>';
+      }
+      
+      // Render Comments
+      renderCommentsList(card.comments || [], cardId);
+      
+      const modal = new bootstrap.Modal(document.getElementById('taskDetailsModal'));
+      modal.show();
+    }
+
+    let selectedCommentAttachments = [];
+
+    function triggerCommentAttachment() {
+      document.getElementById('commentAttachmentInput').click();
+    }
+
+    function handleCommentAttachmentSelect(e) {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      
+      const previewContainer = document.getElementById('commentAttachmentsPreview');
+      previewContainer.classList.remove('d-none');
+      
+      Array.from(files).forEach(file => {
+        selectedCommentAttachments.push(file);
+      });
+      
+      renderCommentAttachmentsPreview();
+      e.target.value = '';
+    }
+
+    function removeSelectedCommentAttachment(e, index) {
+      e.stopPropagation();
+      selectedCommentAttachments.splice(index, 1);
+      renderCommentAttachmentsPreview();
+    }
+
+    function renderCommentAttachmentsPreview() {
+      const previewContainer = document.getElementById('commentAttachmentsPreview');
+      previewContainer.innerHTML = '';
+      
+      if (selectedCommentAttachments.length === 0) {
+        previewContainer.classList.add('d-none');
+        return;
+      }
+      
+      previewContainer.classList.remove('d-none');
+      selectedCommentAttachments.forEach((file, index) => {
+        const pill = document.createElement('span');
+        pill.className = 'badge bg-secondary bg-opacity-25 border border-secondary border-opacity-25 text-white d-inline-flex align-items-center gap-1.5 py-1 px-2';
+        pill.style.fontSize = '10px';
+        pill.style.borderRadius = '6px';
+        
+        const iconClass = file.type.startsWith('image/') ? 'bi-image' : 'bi-film';
+        pill.innerHTML = `
+          <i class="bi ${iconClass}"></i>
+          <span class="text-truncate" style="max-width: 80px;">${escapeHtml(file.name)}</span>
+          <i class="bi bi-x-circle-fill text-danger cursor-pointer" onclick="removeSelectedCommentAttachment(event, ${index})"></i>
+        `;
+        previewContainer.appendChild(pill);
+      });
+    }
+
+    function uploadCommentAttachments(files, cardId, commentId) {
+      if (!files || files.length === 0) {
+        return Promise.resolve([]);
+      }
+      
+      const CHUNK_SIZE = 5 * 1024 * 1024;
+      
+      if (window.Swal) {
+        Swal.fire({
+          title: 'Enviando anexos...',
+          text: 'Fazendo upload das mídias...',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+      }
+
+      let uploadedList = [];
+      let chain = Promise.resolve();
+      
+      files.forEach(file => {
+        chain = chain.then(() => {
+          return new Promise((resolve, reject) => {
+            const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+            let chunkIndex = 0;
+            let finalUrl = '';
+            
+            function uploadNext() {
+              if (chunkIndex >= totalChunks) {
+                uploadedList.push({
+                  type: file.type.startsWith('image/') ? 'image' : 'video',
+                  url: finalUrl || ('/shared/' + encodeURIComponent(file.name)),
+                  name: file.name
+                });
+                resolve();
+                return;
+              }
+              
+              const start = chunkIndex * CHUNK_SIZE;
+              const end = Math.min(start + CHUNK_SIZE, file.size);
+              const chunk = file.slice(start, end);
+              
+              const targetFolder = `tasks/${cardId}/${commentId}`;
+              const url = `/upload-chunk?chunkIndex=${chunkIndex}&totalChunks=${totalChunks}&fileName=${encodeURIComponent(file.name)}&currentPath=${encodeURIComponent(targetFolder)}`;
+              
+              fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/octet-stream' },
+                body: chunk
+              })
+              .then(res => res.json())
+              .then(result => {
+                if (result.success) {
+                  if (result.url) {
+                    finalUrl = result.url;
+                  }
+                  chunkIndex++;
+                  uploadNext();
+                } else {
+                  reject(new Error(result.error || 'Erro ao enviar fragmento do arquivo'));
+                }
+              })
+              .catch(err => reject(err));
+            }
+            
+            uploadNext();
+          });
+        });
+      });
+      
+      return chain.then(() => {
+        if (window.Swal) Swal.close();
+        return uploadedList;
+      });
+    }
+
+    function viewCommentFullScreen(url, type, text) {
+      const overlay = document.createElement('div');
+      overlay.id = 'commentFullScreenOverlay';
+      overlay.style.position = 'fixed';
+      overlay.style.top = '0';
+      overlay.style.left = '0';
+      overlay.style.width = '100vw';
+      overlay.style.height = '100vh';
+      overlay.style.backgroundColor = '#000000';
+      overlay.style.zIndex = '9999';
+      overlay.style.display = 'flex';
+      overlay.style.flexDirection = 'column';
+      overlay.style.justifyContent = 'center';
+      overlay.style.alignItems = 'center';
+      overlay.style.animation = 'fadeIn 0.3s ease';
+
+      const closeBtn = document.createElement('button');
+      closeBtn.innerHTML = '<i class="bi bi-x-lg fs-4"></i>';
+      closeBtn.style.position = 'absolute';
+      closeBtn.style.top = '1.5rem';
+      closeBtn.style.right = '1.5rem';
+      closeBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+      closeBtn.style.border = 'none';
+      closeBtn.style.color = '#ffffff';
+      closeBtn.style.width = '44px';
+      closeBtn.style.height = '44px';
+      closeBtn.style.borderRadius = '50%';
+      closeBtn.style.cursor = 'pointer';
+      closeBtn.style.zIndex = '10000';
+      closeBtn.onclick = () => {
+        overlay.style.animation = 'fadeOut 0.3s ease';
+        setTimeout(() => overlay.remove(), 250);
+      };
+      overlay.appendChild(closeBtn);
+
+      let mediaEl;
+      if (type === 'image') {
+        mediaEl = document.createElement('img');
+        mediaEl.src = url;
+        mediaEl.style.maxWidth = '90%';
+        mediaEl.style.maxHeight = '80vh';
+        mediaEl.style.objectFit = 'contain';
+      } else {
+        mediaEl = document.createElement('video');
+        mediaEl.src = url;
+        mediaEl.controls = true;
+        mediaEl.autoplay = true;
+        mediaEl.style.maxWidth = '90%';
+        mediaEl.style.maxHeight = '80vh';
+      }
+      mediaEl.style.borderRadius = '8px';
+      overlay.appendChild(mediaEl);
+
+      if (text) {
+        const textOverlay = document.createElement('div');
+        textOverlay.style.position = 'absolute';
+        textOverlay.style.bottom = '0';
+        textOverlay.style.width = '100%';
+        textOverlay.style.background = 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 70%, rgba(0,0,0,0) 100%)';
+        textOverlay.style.padding = '2rem 1.5rem';
+        textOverlay.style.textAlign = 'center';
+        
+        const textP = document.createElement('p');
+        textP.className = 'font-outfit text-white m-0';
+        textP.style.fontSize = '15px';
+        textP.style.lineHeight = '1.5';
+        textP.textContent = text;
+        textOverlay.appendChild(textP);
+        
+        overlay.appendChild(textOverlay);
+      }
+
+      if (!document.getElementById('fullScreenAnimationStyles')) {
+        const style = document.createElement('style');
+        style.id = 'fullScreenAnimationStyles';
+        style.innerHTML = `
+          @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+          @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        `;
+        document.head.appendChild(style);
+      }
+
+      document.body.appendChild(overlay);
+    }
+
+    function editCommentClick(cardId, commentId, currentText) {
+      Swal.fire({
+        title: 'Editar Comentário',
+        input: 'textarea',
+        inputValue: currentText,
+        showCancelButton: true,
+        confirmButtonColor: '#7c3aed',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Salvar',
+        cancelButtonText: 'Cancelar',
+        background: '#0f172a',
+        color: '#ffffff'
+      }).then(result => {
+        if (result.isConfirmed && result.value.trim()) {
+          fetch('/api/tasks/comment/edit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              taskId: cardId,
+              commentId: commentId,
+              text: result.value.trim()
+            })
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              boardData = data.tasks;
+              let updatedCard = null;
+              Object.keys(boardData.projects[activeProjectId].columns).forEach(colId => {
+                const found = boardData.projects[activeProjectId].columns[colId].cards.find(c => c.id === cardId);
+                if (found) updatedCard = found;
+              });
+              if (updatedCard) {
+                renderCommentsList(updatedCard.comments || [], cardId);
+              }
+              renderBoard();
+            }
+          });
+        }
+      });
+    }
+
+    function deleteCommentClick(cardId, commentId) {
+      Swal.fire({
+        title: 'Excluir Comentário?',
+        text: 'Essa ação não poderá ser desfeita!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Excluir',
+        cancelButtonText: 'Cancelar',
+        background: '#0f172a',
+        color: '#ffffff'
+      }).then(result => {
+        if (result.isConfirmed) {
+          fetch('/api/tasks/comment/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ taskId: cardId, commentId: commentId })
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              boardData = data.tasks;
+              let updatedCard = null;
+              Object.keys(boardData.projects[activeProjectId].columns).forEach(colId => {
+                const found = boardData.projects[activeProjectId].columns[colId].cards.find(c => c.id === cardId);
+                if (found) updatedCard = found;
+              });
+              if (updatedCard) {
+                renderCommentsList(updatedCard.comments || [], cardId);
+              }
+              renderBoard();
+            }
+          });
+        }
+      });
+    }
+
+    function renderCommentsList(comments, cardId) {
+      const container = document.getElementById('taskCommentsList');
+      container.innerHTML = '';
+      if (!comments || comments.length === 0) {
+        container.innerHTML = `<div class="text-secondary text-center small mt-4 font-outfit">Nenhum comentário ainda.</div>`;
+        return;
+      }
+      
+      comments.forEach(c => {
+        const date = new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const day = new Date(c.timestamp).toLocaleDateString([], { day: '2-digit', month: '2-digit' });
+        const authorBadge = c.author === 'Human' || c.author === 'admin' ? '👤 Humano' : '🤖 ' + c.author;
+        
+        let attachmentsHtml = '';
+        if (c.attachments && c.attachments.length > 0) {
+          attachmentsHtml = '<div class="comment-attachments mt-2 d-flex flex-wrap gap-2">';
+          c.attachments.forEach(att => {
+            if (att.type === 'image') {
+              attachmentsHtml += `
+                <div class="comment-att-item position-relative cursor-pointer" onclick="viewCommentFullScreen('${att.url}', 'image', '${escapeHtml(c.text)}')">
+                  <img src="${att.url}" class="rounded border border-secondary border-opacity-20 hover-opacity-75 transition-all-200" style="width: 80px; height: 80px; object-fit: cover;">
+                </div>
+              `;
+            } else if (att.type === 'video') {
+              attachmentsHtml += `
+                <div class="comment-att-item position-relative cursor-pointer" onclick="viewCommentFullScreen('${att.url}', 'video', '${escapeHtml(c.text)}')" style="width: 80px; height: 80px;">
+                  <video src="${att.url}" class="rounded border border-secondary border-opacity-20" style="width: 100%; height: 100%; object-fit: cover;"></video>
+                  <div class="position-absolute top-50 start-50 translate-middle bg-dark bg-opacity-70 rounded-circle d-flex align-items-center justify-content-center" style="width: 28px; height: 28px;">
+                    <i class="bi bi-play-fill text-white fs-6" style="margin-left: 2px;"></i>
+                  </div>
+                </div>
+              `;
+            }
+          });
+          attachmentsHtml += '</div>';
+        }
+
+        container.innerHTML += `
+          <div class="mb-2 p-2.5 rounded border border-secondary border-opacity-10" style="background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(8px);">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="fw-semibold text-gradient small font-outfit" style="font-size: 11px;">${escapeHtml(authorBadge)}</span>
+              <div class="d-flex align-items-center gap-2">
+                <span class="text-secondary font-outfit" style="font-size: 9px;">${day} às ${date}</span>
+                <button class="btn btn-link p-0 text-secondary hover-text-info border-0" onclick="editCommentClick('${cardId}', '${c.id}', '${escapeHtml(c.text)}')">
+                  <i class="bi bi-pencil" style="font-size: 11px;"></i>
+                </button>
+                <a class="text-secondary hover-text-info d-inline-flex align-items-center" href="/tasks/comment/${c.id}" title="Editar (Nova Tela)">
+                  <i class="bi bi-window-fullscreen" style="font-size: 10px;"></i>
+                </a>
+                <button class="btn btn-link p-0 text-secondary hover-text-danger border-0" onclick="deleteCommentClick('${cardId}', '${c.id}')">
+                  <i class="bi bi-trash" style="font-size: 11px;"></i>
+                </button>
+              </div>
+            </div>
+            <div class="text-white small font-outfit" style="font-size: 12px; line-height: 1.4; color: #e2e8f0 !important;">${escapeHtml(c.text)}</div>
+            ${attachmentsHtml}
+          </div>
+        `;
+      });
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', () => {
+      // Evento para envio do formulário de comentários
+      const commentForm = document.getElementById('addCommentForm');
+      if (commentForm) {
+        commentForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const cardId = document.getElementById('commentTaskIdInput').value;
+          const commentText = document.getElementById('newCommentTextInput').value.trim();
+          if (!commentText || !cardId) return;
+          
+          const sendBtn = document.getElementById('sendCommentBtn');
+          if (sendBtn) sendBtn.disabled = true;
+          
+          const commentId = 'comment_' + Math.random().toString(36).substring(2, 9);
+          
+          uploadCommentAttachments(selectedCommentAttachments, cardId, commentId)
+            .then(attachments => {
+              return fetch('/api/tasks/comment/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  taskId: cardId,
+                  commentId: commentId,
+                  author: 'Human',
+                  text: commentText,
+                  attachments: attachments
+                })
+              });
+            })
+            .then(res => res.json())
+            .then(data => {
+              if (sendBtn) sendBtn.disabled = false;
+              if (data.success) {
+                document.getElementById('newCommentTextInput').value = '';
+                selectedCommentAttachments = [];
+                renderCommentAttachmentsPreview();
+                
+                boardData = data.tasks;
+                
+                let updatedCard = null;
+                Object.keys(boardData.projects[activeProjectId].columns).forEach(colId => {
+                  const found = boardData.projects[activeProjectId].columns[colId].cards.find(c => c.id === cardId);
+                  if (found) updatedCard = found;
+                });
+                
+                if (updatedCard) {
+                  renderCommentsList(updatedCard.comments || [], cardId);
+                }
+                
+                renderBoard();
+              } else {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Erro',
+                  text: data.error || 'Falha ao adicionar comentário'
+                });
+              }
+            })
+            .catch(err => {
+              if (sendBtn) sendBtn.disabled = false;
+              Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: err.message
+              });
+            });
+        });
+      }
+      // Garantir integridade de boardData
+      if (!boardData.projects) {
+        boardData.projects = {};
+      }
+      
+      initViews();
+
+      if (urlParams.get('backupImported') === 'true') {
+        Swal.fire({
+          icon: 'success',
+          title: 'Backup Importado!',
+          text: 'Todo o quadro Kanban e anexos foram restaurados com sucesso.',
+          background: '#0f172a',
+          color: '#ffffff'
+        });
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    });
+
+    function triggerKanbanImport() {
+      document.getElementById('kanbanDirectImportInput').click();
+    }
+
+    function handleKanbanDirectImport(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('backupFile', file);
+
+      Swal.fire({
+        title: 'Importando Backup...',
+        text: 'Restaurando todo o quadro Kanban e anexos...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      fetch('/api/tasks/backup/import', {
+        method: 'POST',
+        body: formData
+      })
+      .then(res => {
+        if (res.redirected) {
+          window.location.href = res.url;
+        } else {
+          return res.text().then(err => { throw new Error(err) });
+        }
+      })
+      .catch(err => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Falha na Importação',
+          text: err.message || 'Erro ao processar backup do Kanban'
+        });
+      });
+    }
+
+    function initViews() {
+      if (activeProjectId && boardData.projects[activeProjectId]) {
+        // Exibir Quadro Kanban do projeto selecionado
+        projectsListView.classList.add('d-none');
+        kanbanBoardView.classList.remove('d-none');
+        
+        const project = boardData.projects[activeProjectId];
+        document.getElementById('activeProjectName').innerText = project.name;
+        document.getElementById('activeProjectDesc').innerText = project.description || 'Sem descrição.';
+        
+        renderBoard();
+        updateFiltersOptions();
+      } else {
+        // Exibir Dashboard de Lista de Projetos
+        kanbanBoardView.classList.add('d-none');
+        projectsListView.classList.remove('d-none');
+        
+        renderProjectsList();
+      }
+    }
+
+    // Renderiza a lista de Projetos (Dashboard Principal)
+    function renderProjectsList() {
+      projectsGrid.innerHTML = '';
+      
+      const projects = boardData.projects || {};
+      const keys = Object.keys(projects);
+      
+      if (keys.length === 0) {
+        projectsGrid.innerHTML = `
+          <div class="col-12 text-center py-5">
+            <i class="bi bi-folder-symlink text-secondary fs-1 mb-2 d-block"></i>
+            <p class="text-secondary small mb-0">Nenhum projeto cadastrado. Crie um novo projeto para começar!</p>
+          </div>
+        `;
+        return;
+      }
+      
+      keys.forEach(key => {
+        const project = projects[key];
+        
+        // Garantir que as colunas existam
+        if (!project.columns) {
+          project.columns = {
+            todo: { id: 'todo', title: 'To Do', cards: [] },
+            doing: { id: 'doing', title: 'Doing', cards: [] },
+            validation: { id: 'validation', title: 'Validation', cards: [] },
+            done: { id: 'done', title: 'Done', cards: [] }
+          };
+        }
+
+        const todoCount = (project.columns.todo.cards || []).length;
+        const doingCount = (project.columns.doing.cards || []).length;
+        const validationCount = (project.columns.validation.cards || []).length;
+        const doneCount = (project.columns.done.cards || []).length;
+        const totalCards = todoCount + doingCount + validationCount + doneCount;
+        
+        const col = document.createElement('div');
+        col.className = 'col-md-6 col-lg-4';
+        
+        col.innerHTML = `
+          <div class="card h-100 border border-secondary border-opacity-10 bg-dark bg-opacity-40 rounded-4 hover-border-primary hover-translate-y cursor-pointer p-4" onclick="selectProject('${project.id}')">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="p-2.5 rounded-3 bg-info bg-opacity-10 text-info">
+                <i class="bi bi-folder2 fs-4"></i>
+              </div>
+              <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-20 py-1.5 px-2.5" style="font-size: 11px;">
+                ${totalCards} tarefas
+              </span>
+            </div>
+            <h4 class="fs-5 fw-bold text-white font-outfit mb-2">${escapeHtml(project.name)}</h4>
+            <p class="text-secondary small mb-4 flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 38px;">
+              ${escapeHtml(project.description || 'Sem descrição cadastrada.')}
+            </p>
+            
+            <div class="border-top border-secondary border-opacity-5 pt-3 d-flex justify-content-between align-items-center gap-2 text-center" style="font-size: 11px;">
+              <div class="flex-fill">
+                <div class="text-secondary font-outfit">To Do</div>
+                <div class="fw-bold text-light mt-0.5">${todoCount}</div>
+              </div>
+              <div class="flex-fill border-start border-secondary border-opacity-5">
+                <div class="text-info font-outfit">Doing</div>
+                <div class="fw-bold text-info mt-0.5">${doingCount}</div>
+              </div>
+              <div class="flex-fill border-start border-secondary border-opacity-5">
+                <div class="text-warning font-outfit">Validation</div>
+                <div class="fw-bold text-warning mt-0.5">${validationCount}</div>
+              </div>
+              <div class="flex-fill border-start border-secondary border-opacity-5">
+                <div class="text-success font-outfit">Done</div>
+                <div class="fw-bold text-success mt-0.5">${doneCount}</div>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        projectsGrid.appendChild(col);
+      });
+    }
+
+    // Navega para um projeto específico
+    function selectProject(projId) {
+      window.location.search = `?project=${encodeURIComponent(projId)}`;
+    }
+
+    // Abre modal para criar projeto
+    function openCreateProjectModal() {
+      document.getElementById('projectNameInput').value = '';
+      document.getElementById('projectDescInput').value = '';
+      
+      const modal = new bootstrap.Modal(document.getElementById('projectModal'));
+      modal.show();
+    }
+
+    // Submit de criação de projeto
+    function saveProjectSubmit(e) {
+      e.preventDefault();
+      
+      const name = document.getElementById('projectNameInput').value.trim();
+      const description = document.getElementById('projectDescInput').value.trim();
+      
+      if (!name) return;
+      
+      const newProjId = 'proj_' + Math.random().toString(36).substring(2, 9);
+      
+      boardData.projects[newProjId] = {
+        id: newProjId,
+        name,
+        description,
+        columns: {
+          todo: { id: 'todo', title: 'To Do', cards: [] },
+          doing: { id: 'doing', title: 'Doing', cards: [] },
+          validation: { id: 'validation', title: 'Validation', cards: [] },
+          done: { id: 'done', title: 'Done', cards: [] }
+        }
+      };
+
+      const modalEl = document.getElementById('projectModal');
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      modal.hide();
+
+      saveBoardToServer();
+      selectProject(newProjId);
+    }
+
+    // Excluir projeto selecionado
+    function deleteActiveProject() {
+      if (!activeProjectId) return;
+      
+      Swal.fire({
+        title: 'Excluir Projeto?',
+        text: "Tudo relacionado a este projeto (incluindo todos os cartões de tarefas) será removido permanentemente!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sim, excluir!',
+        cancelButtonText: 'Cancelar',
+        background: '#0f172a',
+        color: '#ffffff'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          delete boardData.projects[activeProjectId];
+          
+          fetch('/api/tasks/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ projects: boardData.projects })
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              window.location.search = '';
+            } else {
+              Swal.fire('Erro!', 'Falha ao salvar as alterações no servidor.', 'error');
+            }
+          });
+        }
+      });
+    }
+
+    // Renderiza todos os cartões nas colunas do projeto ativo
+    function renderBoard() {
+      if (!activeProjectId || !boardData.projects[activeProjectId]) return;
+      const project = boardData.projects[activeProjectId];
+
+      // Limpa os containers
+      Object.keys(cardsContainers).forEach(colId => {
+        cardsContainers[colId].innerHTML = '';
+      });
+
+      // Popula cada coluna com os cartões correspondentes
+      Object.keys(project.columns).forEach(colId => {
+        const column = project.columns[colId];
+        const cardsList = column.cards || [];
+        
+        // Atualiza contagem da coluna
+        countBadges[colId].innerText = cardsList.length;
+
+        cardsList.forEach(card => {
+          const cardEl = createCardElement(card, colId);
+          cardsContainers[colId].appendChild(cardEl);
+        });
+      });
+    }
+
+    // Cria o elemento HTML de um cartão
+    function createCardElement(card, colId) {
+      const cardEl = document.createElement('div');
+      cardEl.className = 'kanban-card';
+      cardEl.id = `card-${card.id}`;
+      cardEl.setAttribute('draggable', 'true');
+      
+      // Events para drag and drop
+      cardEl.addEventListener('dragstart', (e) => {
+        cardEl.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', card.id);
+      });
+
+      cardEl.addEventListener('dragend', () => {
+        cardEl.classList.remove('dragging');
+        document.querySelectorAll('.kanban-cards').forEach(el => el.classList.remove('drag-over'));
+      });
+
+      // Abrir modal de detalhes e comentários ao clicar no card
+      cardEl.addEventListener('click', (e) => {
+        if (e.target.closest('.dropdown') || e.target.closest('.btn-card-action')) return;
+        showCardDetailsModal(card.id);
+      });
+
+      // Configuração de cores de etiquetas baseadas na escolha
+      const colorClass = card.labelColor || 'default';
+      const labelBadgesHtml = (card.labels || []).map(label => {
+        return `<span class="label-badge label-${colorClass}">${escapeHtml(label.trim())}</span>`;
+      }).join('');
+
+      let dueDateHtml = '';
+      if (card.dueDate) {
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        const dueDate = new Date(card.dueDate + 'T00:00:00');
+        const isOverdue = dueDate < today && colId !== 'done';
+        
+        // Format date nicely (DD/MM/YYYY)
+        const dateParts = card.dueDate.split('-');
+        const formattedDate = dateParts.length === 3 ? `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}` : card.dueDate;
+        
+        const badgeClass = isOverdue ? 'bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30' : 'bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-20';
+        
+        dueDateHtml = `
+          <div class="d-flex align-items-center gap-1.5 badge ${badgeClass} py-1 px-2 mt-1.5" style="font-size: 10px; border-radius: 6px; width: fit-content;">
+            <i class="bi ${isOverdue ? 'bi-exclamation-triangle-fill text-danger' : 'bi-calendar-event'}"></i>
+            <span>${formattedDate}</span>
+          </div>
+        `;
+      }
+
+      cardEl.innerHTML = `
+        <div class="kanban-card-header">
+          <h5 class="kanban-card-title">${escapeHtml(card.title)}</h5>
+          <div class="dropdown">
+            <button class="btn-card-action" data-bs-toggle="dropdown" aria-expanded="false" onclick="event.stopPropagation()">
+              <i class="bi bi-three-dots-vertical"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-dark border border-secondary border-opacity-10 bg-dark shadow-lg">
+              <li>
+                <button class="dropdown-item d-flex align-items-center gap-2 py-1.5 font-outfit" style="font-size: 12px;" onclick="event.stopPropagation(); editCard('${card.id}')">
+                  <i class="bi bi-pencil-fill text-info"></i> Editar
+                </button>
+              </li>
+              <li>
+                <a class="dropdown-item d-flex align-items-center gap-2 py-1.5 font-outfit text-decoration-none" style="font-size: 12px;" href="/tasks/edit/${card.id}" onclick="event.stopPropagation()">
+                  <i class="bi bi-window-fullscreen text-gradient"></i> Editar (Nova Tela)
+                </a>
+              </li>
+              <li>
+                <button class="dropdown-item d-flex align-items-center gap-2 py-1.5 font-outfit" style="font-size: 12px;" onclick="event.stopPropagation(); deleteCard('${card.id}')">
+                  <i class="bi bi-trash-fill text-danger"></i> Deletar
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+        ${card.description ? `<p class="kanban-card-desc">${escapeHtml(card.description)}</p>` : ''}
+        <div class="kanban-card-footer">
+          <div class="d-flex flex-column gap-1 flex-fill">
+            <div class="kanban-card-labels">
+              ${labelBadgesHtml}
+            </div>
+            ${dueDateHtml}
+          </div>
+          ${card.category ? `<span class="kanban-card-category align-self-end">${escapeHtml(card.category)}</span>` : ''}
+        </div>
+      `;
+
+      return cardEl;
+    }
+
+    // Funções nativas de drag and drop
+    function allowDrop(e) {
+      e.preventDefault();
+    }
+
+    function dragEnter(e) {
+      e.preventDefault();
+      e.currentTarget.classList.add('drag-over');
+    }
+
+    function dragLeave(e) {
+      e.currentTarget.classList.remove('drag-over');
+    }
+
+    function drop(e, targetColId) {
+      e.preventDefault();
+      e.currentTarget.classList.remove('drag-over');
+      
+      const cardId = e.dataTransfer.getData('text/plain');
+      if (!cardId || !activeProjectId) return;
+
+      const project = boardData.projects[activeProjectId];
+
+      // Encontrar a coluna de origem e o cartão
+      let sourceColId = '';
+      let targetCard = null;
+
+      Object.keys(project.columns).forEach(colId => {
+        const column = project.columns[colId];
+        const cardIndex = column.cards.findIndex(c => c.id === cardId);
+        if (cardIndex !== -1) {
+          sourceColId = colId;
+          targetCard = column.cards[cardIndex];
+        }
+      });
+
+      if (!targetCard || sourceColId === targetColId) return;
+
+      // Remover da coluna de origem
+      project.columns[sourceColId].cards = project.columns[sourceColId].cards.filter(c => c.id !== cardId);
+      
+      // Adicionar na coluna de destino
+      targetCard.mtime = new Date().toISOString();
+      project.columns[targetColId].cards.push(targetCard);
+
+      // Salvar quadro no servidor
+      saveBoardToServer();
+      renderBoard();
+    }
+
+    // Abre modal para criar cartão
+    function openCreateCardModal() {
+      document.getElementById('taskCardModalLabel').innerText = 'Adicionar Cartão';
+      document.getElementById('cardIdInput').value = '';
+      document.getElementById('cardColumnInput').value = 'todo';
+      document.getElementById('cardTitleInput').value = '';
+      document.getElementById('cardDescInput').value = '';
+      document.getElementById('cardCategoryInput').value = '';
+      document.getElementById('cardLabelColorSelect').value = 'default';
+      document.getElementById('cardDueDateInput').value = '';
+      document.getElementById('cardLabelsInput').value = '';
+      
+      const modal = new bootstrap.Modal(document.getElementById('taskCardModal'));
+      modal.show();
+    }
+
+    // Abre modal para editar cartão
+    function editCard(cardId) {
+      if (!activeProjectId) return;
+      const project = boardData.projects[activeProjectId];
+      
+      let foundCard = null;
+      let foundCol = '';
+
+      Object.keys(project.columns).forEach(colId => {
+        const c = project.columns[colId].cards.find(x => x.id === cardId);
+        if (c) {
+          foundCard = c;
+          foundCol = colId;
+        }
+      });
+
+      if (!foundCard) return;
+
+      document.getElementById('taskCardModalLabel').innerText = 'Editar Cartão';
+      document.getElementById('cardIdInput').value = foundCard.id;
+      document.getElementById('cardColumnInput').value = foundCol;
+      document.getElementById('cardTitleInput').value = foundCard.title;
+      document.getElementById('cardDescInput').value = foundCard.description || '';
+      document.getElementById('cardCategoryInput').value = foundCard.category || '';
+      document.getElementById('cardLabelColorSelect').value = foundCard.labelColor || 'default';
+      document.getElementById('cardDueDateInput').value = foundCard.dueDate || '';
+      document.getElementById('cardLabelsInput').value = (foundCard.labels || []).join(', ');
+
+      const modal = new bootstrap.Modal(document.getElementById('taskCardModal'));
+      modal.show();
+    }
+
+    // Formulário de salvar cartão (Submit)
+    function saveCardSubmit(e) {
+      e.preventDefault();
+
+      if (!activeProjectId) return;
+      const project = boardData.projects[activeProjectId];
+
+      const cardId = document.getElementById('cardIdInput').value;
+      const columnId = document.getElementById('cardColumnInput').value || 'todo';
+      const title = document.getElementById('cardTitleInput').value.trim();
+      const description = document.getElementById('cardDescInput').value.trim();
+      const category = document.getElementById('cardCategoryInput').value.trim();
+      const labelColor = document.getElementById('cardLabelColorSelect').value;
+      const dueDate = document.getElementById('cardDueDateInput').value;
+      const labelsRaw = document.getElementById('cardLabelsInput').value.trim();
+      
+      const labels = labelsRaw ? labelsRaw.split(',').map(l => l.trim()).filter(l => l !== '') : [];
+
+      if (!title) return;
+
+      if (cardId) {
+        // Modo Edição: Localizar cartão e atualizar
+        Object.keys(project.columns).forEach(colId => {
+          const cardIdx = project.columns[colId].cards.findIndex(c => c.id === cardId);
+          if (cardIdx !== -1) {
+            project.columns[colId].cards[cardIdx] = {
+              ...project.columns[colId].cards[cardIdx],
+              title,
+              description,
+              category,
+              labelColor,
+              labels,
+              dueDate,
+              mtime: new Date().toISOString()
+            };
+          }
+        });
+      } else {
+        // Modo Criação: Gerar novo cartão
+        const newCard = {
+          id: 'card_' + Math.random().toString(36).substring(2, 9),
+          title,
+          description,
+          category,
+          labelColor,
+          labels,
+          dueDate,
+          mtime: new Date().toISOString()
+        };
+        project.columns[columnId].cards.push(newCard);
+      }
+
+      // Fechar modal
+      const modalEl = document.getElementById('taskCardModal');
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      modal.hide();
+
+      // Salvar e re-renderizar
+      saveBoardToServer();
+      renderBoard();
+      updateFiltersOptions();
+    }
+
+    // Deletar cartão com SweetAlert
+    function deleteCard(cardId) {
+      if (!activeProjectId) return;
+      const project = boardData.projects[activeProjectId];
+
+      Swal.fire({
+        title: 'Você tem certeza?',
+        text: "Este cartão será removido permanentemente!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#7c3aed',
+        cancelButtonColor: '#ef4444',
+        confirmButtonText: 'Sim, deletar!',
+        cancelButtonText: 'Cancelar',
+        background: '#0f172a',
+        color: '#ffffff'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Deletar cartão
+          Object.keys(project.columns).forEach(colId => {
+            project.columns[colId].cards = project.columns[colId].cards.filter(c => c.id !== cardId);
+          });
+          
+          saveBoardToServer();
+          renderBoard();
+          updateFiltersOptions();
+          
+          Swal.fire({
+            title: 'Deletado!',
+            text: 'O cartão foi removido.',
+            icon: 'success',
+            background: '#0f172a',
+            color: '#ffffff'
+          });
+        }
+      });
+    }
+
+    // Enviar dados para persistência no Node backend
+    function saveBoardToServer() {
+      fetch('/api/tasks/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projects: boardData.projects })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) {
+          console.error("Erro ao salvar quadro:", data.error);
+        }
+      })
+      .catch(err => {
+        console.error("Falha ao comunicar com o servidor:", err);
+      });
+    }
+
+    // Atualiza opções de categorias e etiquetas dinamicamente nos filtros
+    function updateFiltersOptions() {
+      if (!activeProjectId) return;
+      const project = boardData.projects[activeProjectId];
+
+      const categoryFilter = document.getElementById('boardCategoryFilter');
+      const labelFilter = document.getElementById('boardLabelFilter');
+      
+      const categories = new Set();
+      const labels = new Set();
+
+      Object.keys(project.columns).forEach(colId => {
+        (project.columns[colId].cards || []).forEach(card => {
+          if (card.category) categories.add(card.category);
+          (card.labels || []).forEach(label => labels.add(label));
+        });
+      });
+
+      // Repopular categoria
+      categoryFilter.innerHTML = '<option value="">Todas Categorias</option>';
+      categories.forEach(cat => {
+        categoryFilter.innerHTML += `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`;
+      });
+
+      // Repopular etiquetas
+      labelFilter.innerHTML = '<option value="">Todas Etiquetas</option>';
+      labels.forEach(lbl => {
+        labelFilter.innerHTML += `<option value="${escapeHtml(lbl)}">${escapeHtml(lbl)}</option>`;
+      });
+    }
+
+    // Aplica filtros de texto, categoria e etiquetas
+    function applyFilters() {
+      if (!activeProjectId) return;
+      const project = boardData.projects[activeProjectId];
+
+      const searchVal = document.getElementById('boardSearchInput').value.toLowerCase().trim();
+      const catVal = document.getElementById('boardCategoryFilter').value;
+      const lblVal = document.getElementById('boardLabelFilter').value;
+
+      Object.keys(project.columns).forEach(colId => {
+        const cardsList = project.columns[colId].cards || [];
+        const container = cardsContainers[colId];
+        container.innerHTML = '';
+        
+        let visibleCount = 0;
+
+        cardsList.forEach(card => {
+          const matchSearch = !searchVal || card.title.toLowerCase().includes(searchVal) || (card.description && card.description.toLowerCase().includes(searchVal));
+          const matchCategory = !catVal || card.category === catVal;
+          const matchLabel = !lblVal || (card.labels || []).includes(lblVal);
+
+          if (matchSearch && matchCategory && matchLabel) {
+            const cardEl = createCardElement(card, colId);
+            container.appendChild(cardEl);
+            visibleCount++;
+          }
+        });
+
+        // Contagem exibe itens filtrados
+        countBadges[colId].innerText = visibleCount;
+      });
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>

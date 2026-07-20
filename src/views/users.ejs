@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciamento de Usuários - Black Bird Media Center</title>
+</head>
+<body class="bg-dark text-light min-vh-screen">
+
+  <%- include('header') %>
+
+  <!-- Modal de Upload (Necessário por estar no header.ejs) (Bootstrap 5) -->
+  <div class="modal fade animate" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-content-premium border-0">
+        <div class="modal-header modal-header-premium border-0">
+          <h5 class="modal-title font-outfit fw-bold text-white" id="uploadModalLabel">Upload de Arquivos</h5>
+          <button type="button" class="btn-close btn-close-white" onclick="toggleUploadModal()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <input type="hidden" id="currentPath" value="">
+          <label class="d-flex flex-column align-items-center justify-content-center w-100 border border-secondary border-dashed rounded-3 cursor-pointer p-4 bg-dark bg-opacity-25 hover-bg-dark transition-all-200 select-files-box" style="height: 176px; border-style: dashed !important; border-width: 2px !important; border-color: rgba(255,255,255,0.1) !important;">
+            <div class="d-flex flex-column align-items-center justify-content-center text-center">
+              <i class="bi bi-cloud-arrow-up text-secondary fs-1 mb-2 upload-icon"></i>
+              <p class="mb-1 text-light fw-bold small">Selecione arquivos para upload</p>
+              <p class="text-secondary small mb-0" style="font-size: 11px;">Mídia enviada ficará disponível na raiz</p>
+            </div>
+            <input type="file" id="fileInput" class="d-none" multiple>
+          </label>
+          <div id="selectedFilesInfo" class="small text-secondary mt-3 p-3 rounded bg-dark bg-opacity-50 border border-secondary border-opacity-10 d-none" style="max-height: 110px; overflow-y: auto;"></div>
+        </div>
+        <div class="modal-footer modal-footer-premium border-0">
+          <button type="button" class="btn btn-premium-secondary" onclick="toggleUploadModal()">Cancelar</button>
+          <button type="button" class="btn btn-premium-primary border-0" id="uploadFilesBtn">Enviar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-xl py-4 px-3">
+    
+    <!-- Título -->
+    <div class="mb-4">
+      <h2 class="fs-4 fw-bold text-white font-outfit m-0">Gerenciamento de Usuários</h2>
+      <p class="text-secondary small m-0 mt-1">Crie usuários e controle permissões de acesso por grupo (Admin / Customers)</p>
+    </div>
+
+    <div class="row g-4">
+      <!-- Lista de Usuários -->
+      <div class="col-12 col-lg-8">
+        <div class="card border border-secondary border-opacity-10 shadow-lg h-100" style="background-color: rgba(15, 23, 42, 0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+          <div class="card-header border-bottom border-secondary border-opacity-10 bg-transparent py-3 px-4">
+            <h5 class="card-title font-outfit fw-semibold text-white m-0 d-flex align-items-center gap-2">
+              <i class="bi bi-people-fill text-gradient"></i>
+              Usuários Cadastrados
+            </h5>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-premium align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>Nome de Usuário</th>
+                    <th>Grupo / Nível</th>
+                    <th class="text-end">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% users.forEach(u => { %>
+                    <tr class="table-row-premium">
+                      <td class="fw-semibold text-white">
+                        <i class="bi bi-person-circle text-secondary me-2"></i>
+                        <%= u.username %>
+                      </td>
+                      <td>
+                        <% if (u.group === 'admin') { %>
+                          <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-20 px-2.5 py-1.5 font-mono text-uppercase">Admin</span>
+                        <% } else { %>
+                          <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-20 px-2.5 py-1.5 font-mono text-uppercase">Customer</span>
+                        <% } %>
+                      </td>
+                      <td class="text-end">
+                        <% if (u.username !== currentUsername) { %>
+                          <form action="/users/delete" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir o usuário <%= u.username %>? Os arquivos dele não serão apagados do disco.')">
+                            <input type="hidden" name="username" value="<%= u.username %>">
+                            <button type="submit" class="btn btn-sm btn-link text-danger text-decoration-none fw-semibold p-0 border-0 cursor-pointer">
+                              <i class="bi bi-trash-fill"></i> Excluir
+                            </button>
+                          </form>
+                        <% } else { %>
+                          <span class="text-secondary small font-mono">(Você está logado)</span>
+                        <% } %>
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulário de Criação -->
+      <div class="col-12 col-lg-4">
+        <div class="card border border-secondary border-opacity-10 shadow-lg" style="background-color: rgba(15, 23, 42, 0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+          <div class="card-header border-bottom border-secondary border-opacity-10 bg-transparent py-3 px-4">
+            <h5 class="card-title font-outfit fw-semibold text-white m-0 d-flex align-items-center gap-2">
+              <i class="bi bi-person-plus-fill text-gradient"></i>
+              Criar Novo Usuário
+            </h5>
+          </div>
+          <div class="card-body p-4">
+            <% if (typeof error !== 'undefined' && error) { %>
+              <div class="alert alert-danger py-2 px-3 small border-0 mb-3" style="background-color: rgba(220, 53, 69, 0.15); color: #ea868f;">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> <%= error %>
+              </div>
+            <% } %>
+
+            <form action="/users/add" method="POST">
+              <div class="mb-3">
+                <label for="username" class="form-label text-white fw-semibold small text-uppercase tracking-wider">Nome de Usuário</label>
+                <input type="text" id="username" name="username" placeholder="Ex: john_doe" required class="form-control input-premium">
+              </div>
+
+              <div class="mb-3">
+                <label for="password" class="form-label text-white fw-semibold small text-uppercase tracking-wider">Senha</label>
+                <input type="password" id="password" name="password" placeholder="••••••••" required class="form-control input-premium">
+              </div>
+
+              <div class="mb-4">
+                <label for="group" class="form-label text-white fw-semibold small text-uppercase tracking-wider">Grupo / Nível de Acesso</label>
+                <select id="group" name="group" class="form-select input-premium">
+                  <option value="customer" selected>Customer (Acesso apenas à sua pasta própria)</option>
+                  <option value="admin">Admin (Acesso a todos os arquivos)</option>
+                </select>
+              </div>
+
+              <button type="submit" class="btn btn-premium-primary w-100 border-0 py-2.5 fw-semibold font-outfit shadow-sm">
+                <i class="bi bi-plus-circle-fill me-1"></i> Criar Usuário
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

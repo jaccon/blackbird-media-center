@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="<%= currentLang %>">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notes & Reminders - Black Bird Media Center</title>
+  <style>
+    .notes-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      margin-top: 1.5rem;
+    }
+
+    .note-card {
+      background: rgba(15, 23, 42, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 12px;
+      padding: 0.85rem 1.4rem;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      transition: all 0.25s ease-in-out;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    .note-card:hover {
+      transform: translateX(4px);
+      border-color: rgba(124, 58, 237, 0.25);
+      background: rgba(15, 23, 42, 0.6);
+      box-shadow: 0 6px 20px rgba(124, 58, 237, 0.08);
+    }
+
+    .note-title {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 0;
+    }
+
+    .btn-delete-note {
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.1);
+      border: none;
+      padding: 0.35rem 0.5rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-delete-note:hover {
+      background: rgba(239, 68, 68, 0.2);
+    }
+
+    .note-body {
+      font-size: 13px;
+      color: #94a3b8;
+      line-height: 1.4;
+      margin: 0;
+      white-space: pre-wrap;
+    }
+
+    .note-date {
+      font-size: 11px;
+      color: #64748b;
+    }
+
+    .note-badge {
+      font-size: 10.5px;
+      font-weight: 500;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .note-badge-human {
+      background: rgba(255, 255, 255, 0.04);
+      color: #e2e8f0;
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .note-badge-agent {
+      background: rgba(124, 58, 237, 0.12);
+      color: #c084fc;
+      border-color: rgba(124, 58, 237, 0.25);
+    }
+
+    .note-badge-system {
+      background: rgba(59, 130, 246, 0.12);
+      color: #60a5fa;
+      border-color: rgba(59, 130, 246, 0.25);
+    }
+  </style>
+</head>
+
+<body class="bg-dark text-light min-vh-screen">
+
+  <%- include('header') %>
+
+  <!-- Modal de Upload (Necessário por estar no header.ejs) -->
+  <div class="modal fade animate" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-content-premium border-0">
+        <div class="modal-header modal-header-premium border-0">
+          <h5 class="modal-title font-outfit fw-bold text-white" id="uploadModalLabel">Upload Files</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <input type="hidden" id="currentPath" value="">
+          <label class="d-flex flex-column align-items-center justify-content-center w-100 border border-secondary border-dashed rounded-3 cursor-pointer p-4 bg-dark bg-opacity-25 hover-bg-dark transition-all-200 select-files-box" style="height: 176px; border-style: dashed !important; border-width: 2px !important; border-color: rgba(255,255,255,0.1) !important;">
+            <div class="d-flex flex-column align-items-center justify-content-center text-center">
+              <i class="bi bi-cloud-arrow-up text-secondary fs-1 mb-2 upload-icon"></i>
+              <p class="mb-1 text-light fw-bold small">Select files to upload</p>
+              <p class="text-secondary small mb-0" style="font-size: 11px;">Media files will be saved to root folder</p>
+            </div>
+            <input type="file" id="fileInput" class="d-none" multiple>
+          </label>
+        </div>
+        <div class="modal-footer modal-footer-premium border-0">
+          <button type="button" class="btn btn-premium-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-premium-primary border-0" id="uploadFilesBtn">Upload</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Criar Pasta (Necessário por estar no header.ejs) -->
+  <div class="modal fade animate" id="createFolderModal" tabindex="-1" aria-labelledby="createFolderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-content-premium border-0">
+        <div class="modal-header modal-header-premium border-0">
+          <h5 class="modal-title font-outfit fw-bold text-white" id="createFolderModalLabel"><%= t('create_folder') %></h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form action="/create-dir" method="POST" class="m-0">
+          <div class="modal-body p-4">
+            <input type="hidden" name="path" id="createFolderPathInput" value="">
+            <div class="mb-3">
+              <label for="dirNameInput" class="form-label text-uppercase text-secondary fw-semibold small tracking-wider mb-2"><%= t('folder_name') %></label>
+              <input type="text" id="dirNameInput" name="dirName" placeholder="Ex: Pasta Nova" required class="form-control input-premium">
+            </div>
+          </div>
+          <div class="modal-footer modal-footer-premium border-0">
+            <button type="button" class="btn btn-premium-secondary" data-bs-dismiss="modal"><%= t('cancel') %></button>
+            <button type="submit" class="btn btn-premium-primary border-0"><%= t('create') %></button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CRIAR NOVA ANOTAÇÃO / LEMBRETE -->
+  <div class="modal fade animate" id="createNoteModal" tabindex="-1" aria-labelledby="createNoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-content-premium border-0">
+        <div class="modal-header modal-header-premium border-0">
+          <h5 class="modal-title font-outfit fw-bold text-white" id="createNoteModalLabel">Create Note & Reminder</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="createNoteForm" class="m-0">
+          <div class="modal-body p-4">
+            
+            <div class="mb-3">
+              <label for="noteTitleInput" class="form-label text-secondary fw-semibold small mb-2">Title</label>
+              <input type="text" id="noteTitleInput" placeholder="Ex: Daily Workout Route, Shopping List" required class="form-control input-premium">
+            </div>
+
+            <div class="mb-3">
+              <label for="noteContentInput" class="form-label text-secondary fw-semibold small mb-2">Content</label>
+              <textarea id="noteContentInput" rows="5" placeholder="Write note details or reminders..." required class="form-control input-premium"></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label for="noteAttachmentInput" class="form-label text-secondary fw-semibold small mb-2">Attachment / Anexo (Optional)</label>
+              <input type="file" id="noteAttachmentInput" class="form-control input-premium">
+            </div>
+
+          </div>
+          <div class="modal-footer modal-footer-premium border-0">
+            <button type="button" class="btn btn-premium-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-premium-primary border-0">Save Note</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DETALHES DA ANOTAÇÃO -->
+  <div class="modal fade animate" id="noteDetailsModal" tabindex="-1" aria-labelledby="noteDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content modal-content-premium border-0" style="background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1) !important;">
+        <div class="modal-header modal-header-premium border-0 pb-0">
+          <h5 class="modal-title font-outfit fw-bold text-white" id="noteDetailsTitle">Detalhes da Anotação</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4 pt-3">
+          <!-- Metadata row -->
+          <div class="d-flex align-items-center justify-content-between mb-3 border-bottom border-secondary border-opacity-10 pb-2">
+            <div id="noteDetailsMetaBadge"></div>
+            <span id="noteDetailsMetaDate" class="text-secondary small font-outfit"></span>
+          </div>
+
+          <!-- Note Content -->
+          <div class="mb-4">
+            <label class="text-secondary small fw-semibold text-uppercase tracking-wider mb-2 font-outfit" style="font-size: 11px;">Conteúdo</label>
+            <div id="noteDetailsContent" class="text-white small p-3 rounded border border-secondary border-opacity-10" style="background: rgba(0, 0, 0, 0.2); white-space: pre-wrap; font-size: 13.5px; line-height: 1.6; color: #cbd5e1 !important; min-height: 120px; max-height: 300px; overflow-y: auto;"></div>
+          </div>
+
+          <!-- Attachments Area -->
+          <div id="noteDetailsAttachmentsSection" class="d-none">
+            <label class="text-secondary small fw-semibold text-uppercase tracking-wider mb-2.5 font-outfit" style="font-size: 11px;">Anexos / Arquivos</label>
+            <div id="noteDetailsAttachmentsList" class="d-flex flex-column gap-2">
+              <!-- Renderizado dinamicamente -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <div class="container-xl py-4 px-3">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h2 class="fs-4 fw-bold text-white font-outfit m-0">Notes & Reminders</h2>
+        <p class="text-secondary small m-0 mt-1">Dual human-agent read/write space for annotations, diets, workout routines, and custom guidelines.</p>
+      </div>
+      <button class="btn btn-premium-primary font-outfit px-3 py-2" data-bs-toggle="modal" data-bs-target="#createNoteModal">
+        <i class="bi bi-plus-lg me-1"></i>New Note
+      </button>
+    </div>
+
+    <!-- Lista de Notas (Lista Cronológica Decrescente) -->
+    <div class="notes-list" id="notesContainer">
+      <% if (notesList.length === 0) { %>
+        <div class="col-12 text-center py-5 text-secondary opacity-50 font-outfit">
+          <i class="bi bi-sticky fs-1 mb-2 d-block"></i>
+          <span>No notes found. Create one above or let your AI Agent do it for you!</span>
+        </div>
+      <% } else { %>
+        <% const sortedNotes = [...notesList].reverse(); %>
+        <% sortedNotes.forEach(note => { %>
+          <div class="note-card border border-secondary border-opacity-10 py-3 px-4 mb-2.5 d-flex align-items-center justify-content-between" id="note-card-<%= note.id %>" onclick="showNoteDetails('<%= note.id %>')" style="background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(12px); border-radius: 12px; gap: 20px; cursor: pointer;">
+            <div class="d-flex align-items-center gap-3" style="width: 130px; flex-shrink: 0;">
+              <% if (note.createdBy === 'System') { %>
+                <span class="note-badge note-badge-system">
+                  <i class="bi bi-info-circle"></i>System
+                </span>
+              <% } else if (note.createdBy === 'Human') { %>
+                <span class="note-badge note-badge-human">
+                  <i class="bi bi-person"></i>Human
+                </span>
+              <% } else { %>
+                <span class="note-badge note-badge-agent">
+                  <i class="bi bi-robot"></i><%= note.createdBy %>
+                </span>
+              <% } %>
+            </div>
+            
+            <div class="flex-grow-1" style="min-width: 0;">
+              <h4 class="note-title mb-1 fw-bold text-white font-outfit" style="font-size: 14.5px;"><%= note.title %></h4>
+              <p class="note-body m-0 text-secondary small text-truncate" style="font-size: 13px;" title="<%= note.content %>"><%= note.content %></p>
+            </div>
+            
+            <div class="d-flex align-items-center gap-3.5 flex-shrink: 0;">
+              <span class="note-date text-secondary font-outfit" style="font-size: 11px;">
+                <%= new Date(note.timestamp).toLocaleDateString(currentLang === 'pt' ? 'pt-BR' : 'en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+              </span>
+              <button class="btn-delete-note p-1.5" onclick="event.stopPropagation(); deleteNote('<%= note.id %>')" title="Delete Note" style="border-radius: 6px; background: rgba(239, 68, 68, 0.1); border: none;">
+                <i class="bi bi-trash-fill text-danger" style="font-size: 13px;"></i>
+              </button>
+            </div>
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/sweetalert2.all.min.js"></script>
+
+  <script>
+    let lastNotesJson = '';
+
+    // Escape HTML helper
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Registrar estado inicial dos JSONs para evitar re-render desnecessário
+      fetch('/api/notes/list')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            lastNotesJson = JSON.stringify(data.notes);
+          }
+        });
+
+      const createNoteForm = document.getElementById('createNoteForm');
+      if (createNoteForm) {
+        createNoteForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          handleCreateNoteSubmit();
+        });
+      }
+
+      // Loop de sincronização dinâmica em tempo real (a cada 3 segundos)
+      setInterval(syncNotesListDynamically, 3000);
+    });
+
+    function syncNotesListDynamically() {
+      fetch('/api/notes/list')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            const currentJson = JSON.stringify(data.notes);
+            if (currentJson !== lastNotesJson) {
+              lastNotesJson = currentJson;
+              renderNotesList(data.notes);
+            }
+          }
+        })
+        .catch(err => console.error("Erro ao sincronizar anotações:", err));
+    }
+
+    function renderNotesList(notes) {
+      const container = document.getElementById('notesContainer');
+      if (!notes || notes.length === 0) {
+        container.innerHTML = `
+          <div class="col-12 text-center py-5 text-secondary opacity-50 font-outfit">
+            <i class="bi bi-sticky fs-1 mb-2 d-block"></i>
+            <span>No notes found. Create one above or let your AI Agent do it for you!</span>
+          </div>
+        `;
+        return;
+      }
+
+      const sorted = [...notes].reverse();
+      const currentLang = '<%= currentLang %>';
+      
+      container.innerHTML = sorted.map(note => {
+        const date = new Date(note.timestamp).toLocaleDateString(currentLang === 'pt' ? 'pt-BR' : 'en-US', { 
+          month: 'short', 
+          day: 'numeric', 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
+
+        let badgeHtml = '';
+        if (note.createdBy === 'System') {
+          badgeHtml = `<span class="note-badge note-badge-system"><i class="bi bi-info-circle"></i>System</span>`;
+        } else if (note.createdBy === 'Human') {
+          badgeHtml = `<span class="note-badge note-badge-human"><i class="bi bi-person"></i>Human</span>`;
+        } else {
+          badgeHtml = `<span class="note-badge note-badge-agent"><i class="bi bi-robot"></i>${escapeHtml(note.createdBy)}</span>`;
+        }
+
+        return `
+          <div class="note-card border border-secondary border-opacity-10 py-3 px-4 mb-2.5 d-flex align-items-center justify-content-between" id="note-card-${note.id}" style="background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(12px); border-radius: 12px; gap: 20px;">
+            <div class="d-flex align-items-center gap-3" style="width: 130px; flex-shrink: 0;">
+              ${badgeHtml}
+            </div>
+            
+            <div class="flex-grow-1" style="min-width: 0;">
+              <h4 class="note-title mb-1 fw-bold text-white font-outfit" style="font-size: 14.5px;">${escapeHtml(note.title)}</h4>
+              <p class="note-body m-0 text-secondary small text-truncate" style="font-size: 13px;" title="${escapeHtml(note.content)}">${escapeHtml(note.content)}</p>
+            </div>
+            
+            <div class="d-flex align-items-center gap-3.5 flex-shrink: 0;">
+              <span class="note-date text-secondary font-outfit" style="font-size: 11px;">${date}</span>
+              <button class="btn-delete-note p-1.5" onclick="deleteNote('${note.id}')" title="Delete Note" style="border-radius: 6px; background: rgba(239, 68, 68, 0.1); border: none;">
+                <i class="bi bi-trash-fill text-danger" style="font-size: 13px;"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function showNoteDetails(noteId) {
+      fetch('/api/notes/list')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            const note = data.notes.find(n => n.id === noteId);
+            if (!note) return;
+
+            document.getElementById('noteDetailsTitle').textContent = note.title;
+            
+            const date = new Date(note.timestamp).toLocaleDateString('<%= currentLang %>' === 'pt' ? 'pt-BR' : 'en-US', { 
+              month: 'short', 
+              day: 'numeric', 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            });
+            document.getElementById('noteDetailsMetaDate').textContent = date;
+
+            let badgeHtml = '';
+            if (note.createdBy === 'System') {
+              badgeHtml = `<span class="note-badge note-badge-system"><i class="bi bi-info-circle me-1"></i>System</span>`;
+            } else if (note.createdBy === 'Human') {
+              badgeHtml = `<span class="note-badge note-badge-human"><i class="bi bi-person me-1"></i>Human</span>`;
+            } else {
+              badgeHtml = `<span class="note-badge note-badge-agent"><i class="bi bi-robot me-1"></i>${escapeHtml(note.createdBy)}</span>`;
+            }
+            document.getElementById('noteDetailsMetaBadge').innerHTML = badgeHtml;
+
+            document.getElementById('noteDetailsContent').textContent = note.content;
+
+            const attachmentsList = document.getElementById('noteDetailsAttachmentsList');
+            const attachmentsSection = document.getElementById('noteDetailsAttachmentsSection');
+            attachmentsList.innerHTML = '';
+            
+            const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+            const matches = [...note.content.matchAll(markdownLinkRegex)];
+            
+            const sharedUrlRegex = /(\/shared\/[a-zA-Z0-9_.-]+)/g;
+            const sharedMatches = note.content.match(sharedUrlRegex) || [];
+
+            const fileUrls = [];
+            
+            matches.forEach(match => {
+              const url = match[2];
+              if (url.includes('/shared/') && !fileUrls.some(f => f.url === url)) {
+                fileUrls.push({ name: match[1], url: url });
+              }
+            });
+
+            sharedMatches.forEach(url => {
+              if (!fileUrls.some(f => f.url === url)) {
+                const parts = url.split('/');
+                const name = parts[parts.length - 1];
+                fileUrls.push({ name: name, url: url });
+              }
+            });
+
+            if (fileUrls.length > 0) {
+              attachmentsSection.classList.remove('d-none');
+              fileUrls.forEach(file => {
+                const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.url);
+                let previewHtml = '';
+                
+                if (isImage) {
+                  previewHtml = `
+                    <div class="mb-2 text-center bg-dark bg-opacity-30 p-2 rounded border border-secondary border-opacity-10">
+                      <img src="${file.url}" alt="${escapeHtml(file.name)}" class="img-fluid rounded" style="max-height: 200px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                    </div>
+                  `;
+                }
+
+                attachmentsList.innerHTML += `
+                  <div class="p-2.5 rounded border border-secondary border-opacity-10 d-flex flex-column gap-2" style="background: rgba(255, 255, 255, 0.02);">
+                    <div class="d-flex align-items-center justify-content-between">
+                      <div class="d-flex align-items-center gap-2 text-white font-outfit" style="font-size: 13px; min-width: 0;">
+                        <i class="bi ${isImage ? 'bi-image text-info' : 'bi-file-earmark-text text-warning'}"></i>
+                        <span class="text-truncate">${escapeHtml(file.name)}</span>
+                      </div>
+                      <a href="${file.url}" target="_blank" class="btn btn-sm btn-premium-primary py-1 px-3.5 border-0 font-outfit" style="font-size: 11px;">
+                        <i class="bi bi-eye-fill me-1"></i>Abrir Anexo
+                      </a>
+                    </div>
+                    ${previewHtml}
+                  </div>
+                `;
+              });
+            } else {
+              attachmentsSection.classList.add('d-none');
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('noteDetailsModal'));
+            modal.show();
+          }
+        });
+    }
+
+    function handleCreateNoteSubmit() {
+      const title = document.getElementById('noteTitleInput').value.trim();
+      const content = document.getElementById('noteContentInput').value.trim();
+      const fileInput = document.getElementById('noteAttachmentInput');
+
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('content', content);
+      formData.append('createdBy', 'Human');
+      if (fileInput && fileInput.files.length > 0) {
+        formData.append('attachment', fileInput.files[0]);
+      }
+
+      fetch('/api/notes/create', {
+        method: 'POST',
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          const modalEl = document.getElementById('createNoteModal');
+          const modalInstance = bootstrap.Modal.getInstance(modalEl);
+          if (modalInstance) {
+            modalInstance.hide();
+          }
+          document.getElementById('noteTitleInput').value = '';
+          document.getElementById('noteContentInput').value = '';
+          if (fileInput) fileInput.value = '';
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Note Saved',
+            text: 'Your annotation was successfully created!',
+            background: '#0f172a',
+            color: '#ffffff',
+            timer: 1500,
+            showConfirmButton: false
+          });
+        }
+      })
+      .catch(err => {
+        console.error(err);
+      });
+    }
+
+    function deleteNote(noteId) {
+      Swal.fire({
+        title: 'Delete Note?',
+        text: 'This annotation will be permanently deleted!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Delete',
+        cancelButtonText: 'Cancel',
+        background: '#0f172a',
+        color: '#ffffff'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch('/api/notes/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ noteId })
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              const card = document.getElementById(`note-card-${noteId}`);
+              if (card) {
+                card.remove();
+              }
+              Swal.fire({
+                icon: 'success',
+                title: 'Deleted',
+                text: 'Annotation deleted successfully!',
+                background: '#0f172a',
+                color: '#ffffff',
+                timer: 1500,
+                showConfirmButton: false
+              });
+            }
+          });
+        }
+      });
+    }
+  </script>
+</body>
+
+</html>

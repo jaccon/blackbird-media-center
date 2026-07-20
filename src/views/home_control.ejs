@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="<%= currentLang %>">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= t('home_control') %> - Black Bird Media Center</title>
+  <style>
+    /* Custom styles for home control */
+    .device-card {
+      background-color: rgba(15, 23, 42, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 16px;
+      padding: 1.5rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    
+    .device-card:hover {
+      transform: translateY(-4px) scale(1.02);
+      border-color: rgba(124, 58, 237, 0.3);
+      box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .device-card.active {
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.15), rgba(79, 70, 229, 0.15));
+      border-color: rgba(124, 58, 237, 0.4);
+      box-shadow: 0 8px 30px rgba(124, 58, 237, 0.2);
+    }
+    
+    /* Device glows */
+    .device-glow {
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(124, 58, 237, 0.08) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      pointer-events: none;
+    }
+    
+    .device-card.active .device-glow {
+      opacity: 1;
+    }
+
+    .form-range::-webkit-slider-runnable-track {
+      background: rgba(255, 255, 255, 0.1);
+      height: 6px;
+      border-radius: 3px;
+    }
+
+    .form-range::-webkit-slider-thumb {
+      background: #7c3aed;
+      border: none;
+      width: 16px;
+      height: 16px;
+      margin-top: -5px;
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(124, 58, 237, 0.5);
+    }
+    
+    .form-range::-moz-range-thumb {
+      background: #7c3aed;
+      border: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(124, 58, 237, 0.5);
+    }
+
+    .btn-media-ctrl {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #e2e8f0;
+      border-radius: 12px;
+      padding: 0.5rem 0.8rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-media-ctrl:hover {
+      background: rgba(124, 58, 237, 0.2);
+      border-color: rgba(124, 58, 237, 0.4);
+      color: white;
+    }
+
+    .btn-media-ctrl:active {
+      transform: scale(0.95);
+    }
+  </style>
+</head>
+
+<body class="bg-dark text-light min-vh-screen">
+
+  <%- include('header') %>
+
+  <!-- Modal de Upload (Necessário por estar no header.ejs) -->
+  <div class="modal fade animate" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-content-premium border-0">
+        <div class="modal-header modal-header-premium border-0">
+          <h5 class="modal-title font-outfit fw-bold text-white" id="uploadModalLabel">Upload de Arquivos</h5>
+          <button type="button" class="btn-close btn-close-white" onclick="toggleUploadModal()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <input type="hidden" id="currentPath" value="">
+          <label class="d-flex flex-column align-items-center justify-content-center w-100 border border-secondary border-dashed rounded-3 cursor-pointer p-4 bg-dark bg-opacity-25 hover-bg-dark transition-all-200 select-files-box" style="height: 176px; border-style: dashed !important; border-width: 2px !important; border-color: rgba(255,255,255,0.1) !important;">
+            <div class="d-flex flex-column align-items-center justify-content-center text-center">
+              <i class="bi bi-cloud-arrow-up text-secondary fs-1 mb-2 upload-icon"></i>
+              <p class="mb-1 text-light fw-bold small">Selecione arquivos para upload</p>
+              <p class="text-secondary small mb-0" style="font-size: 11px;">Mídia enviada ficará disponível na raiz</p>
+            </div>
+            <input type="file" id="fileInput" class="d-none" multiple>
+          </label>
+        </div>
+        <div class="modal-footer modal-footer-premium border-0">
+          <button type="button" class="btn btn-premium-secondary" onclick="toggleUploadModal()">Cancelar</button>
+          <button type="button" class="btn btn-premium-primary border-0" id="uploadFilesBtn">Enviar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para adicionar dispositivo manualmente -->
+  <div class="modal fade animate" id="addDeviceModal" tabindex="-1" aria-labelledby="addDeviceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-content-premium border-0" style="background-color: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px);">
+        <!-- Modal Header -->
+        <div class="modal-header modal-header-premium border-0">
+          <h5 class="modal-title font-outfit fw-bold text-white" id="addDeviceModalLabel">Adicionar Dispositivo</h5>
+          <button type="button" class="btn-close btn-close-white" onclick="closeAddDeviceModal()" aria-label="Close"></button>
+        </div>
+        <!-- Modal Body -->
+        <div class="modal-body p-4">
+          <form id="addDeviceForm">
+            <div class="mb-3">
+              <label for="deviceName" class="form-label text-secondary small">Nome do Dispositivo</label>
+              <input type="text" id="deviceName" required class="form-control input-premium" placeholder="Ex: Lâmpada Quarto">
+            </div>
+            
+            <div class="mb-3">
+              <label for="deviceType" class="form-label text-secondary small">Tipo de Aparelho</label>
+              <select id="deviceType" class="form-select form-control input-premium pe-5" style="background-color: rgba(15, 23, 42, 0.45);" onchange="handleTypeChange()">
+                <option value="light">Lâmpada / Iluminação</option>
+                <option value="switch">Tomada / Interruptor</option>
+                <option value="media_player">Smart TV / Mídia</option>
+                <option value="climate">Ar Condicionado</option>
+              </select>
+            </div>
+            
+            <div class="mb-3">
+              <label for="deviceProtocol" class="form-label text-secondary small">Protocolo / Integração</label>
+              <select id="deviceProtocol" class="form-select form-control input-premium pe-5" style="background-color: rgba(15, 23, 42, 0.45);" onchange="handleProtocolChange()">
+                <option value="mock">Simulado (Apenas testes)</option>
+                <option value="roku">Roku TV (Controle de TV local)</option>
+                <option value="shelly">Shelly (Tomadas/Relés Wi-Fi)</option>
+                <option value="tasmota">Tasmota (Tomadas/Interruptores Wi-Fi)</option>
+                <option value="sonoff">Sonoff (Modo LAN/DIY)</option>
+                <option value="custom">URLs Customizadas (Qualquer API HTTP/REST)</option>
+              </select>
+            </div>
+            
+            <div class="mb-3" id="ipField" style="display: none;">
+              <label for="deviceIp" class="form-label text-secondary small">Endereço IP Local</label>
+              <input type="text" id="deviceIp" class="form-control input-premium" placeholder="Ex: 192.168.1.50">
+            </div>
+            
+            <!-- Custom HTTP URLs Fields -->
+            <div id="customFields" style="display: none;">
+              <div class="mb-3">
+                <label for="onUrl" class="form-label text-secondary small">URL para Ligar (HTTP GET)</label>
+                <input type="text" id="onUrl" class="form-control input-premium" placeholder="Ex: http://192.168.1.50/on">
+              </div>
+              <div class="mb-3">
+                <label for="offUrl" class="form-label text-secondary small">URL para Desligar (HTTP GET)</label>
+                <input type="text" id="offUrl" class="form-control input-premium" placeholder="Ex: http://192.168.1.50/off">
+              </div>
+              <div class="mb-3" id="brightnessUrlField">
+                <label for="brightnessUrl" class="form-label text-secondary small">URL para Brilho (Opcional - use {value})</label>
+                <input type="text" id="brightnessUrl" class="form-control input-premium" placeholder="Ex: http://192.168.1.50/bright?val={value}">
+              </div>
+              <div class="mb-3" id="temperatureUrlField" style="display: none;">
+                <label for="temperatureUrl" class="form-label text-secondary small">URL para Temperatura (Opcional - use {value})</label>
+                <input type="text" id="temperatureUrl" class="form-control input-premium" placeholder="Ex: http://192.168.1.50/temp?val={value}">
+              </div>
+            </div>
+          </form>
+        </div>
+        <!-- Modal Footer -->
+        <div class="modal-footer modal-footer-premium border-0">
+          <button type="button" class="btn btn-premium-secondary" onclick="closeAddDeviceModal()">Cancelar</button>
+          <button type="button" class="btn btn-premium-primary border-0" onclick="submitAddDevice()">Salvar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-xl py-5 px-3">
+    <!-- Cabeçalho -->
+    <div class="mb-5 d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div>
+        <h2 class="fs-3 fw-bold text-white font-outfit m-0">
+          <i class="bi bi-house-gear text-fuchsia-500 me-2"></i><%= t('home_control') %>
+        </h2>
+        <p class="text-secondary small m-0 mt-2">
+          Gerencie e controle de forma unificada todos os seus dispositivos inteligentes locais e integrados (Smart TVs, luzes, tomadas, ar-condicionado).
+        </p>
+      </div>
+      <div class="d-flex gap-2">
+        <button onclick="openAddDeviceModal()" class="btn btn-premium-secondary d-flex align-items-center gap-2 border-0 px-4 py-2.5">
+          <i class="bi bi-plus-lg fs-6"></i>
+          <span class="font-outfit fw-semibold">Adicionar Manualmente</span>
+        </button>
+        <button onclick="discoverLocalDevices()" class="btn btn-premium-primary d-flex align-items-center gap-2 border-0 px-4 py-2.5">
+          <i class="bi bi-search fs-6"></i>
+          <span class="font-outfit fw-semibold">Sincronizar Rede Local</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Grid de Dispositivos -->
+    <div class="row g-4">
+      <% if (devices.length === 0) { %>
+        <div class="col-12">
+          <div class="text-center py-5 rounded border border-secondary border-opacity-10" style="background-color: rgba(15, 23, 42, 0.25);">
+            <i class="bi bi-cpu fs-1 text-secondary opacity-50 mb-3 d-block"></i>
+            <h5 class="text-white font-outfit fw-semibold">Nenhum dispositivo sincronizado</h5>
+            <p class="text-secondary small max-w-md mx-auto mt-2" style="max-width: 460px;">
+              Clique em "Sincronizar Rede Local" no topo direito para detectar TVs Roku, tomadas Shelly e Tasmota na sua Wi-Fi, ou clique em "Adicionar Manualmente".
+            </p>
+          </div>
+        </div>
+      <% } else { %>
+        <% devices.forEach(device => { %>
+          <div class="col-md-6 col-lg-4">
+            <div class="device-card <%= device.state === 'on' ? 'active' : '' %>" id="card-<%= device.id %>">
+              <div class="device-glow"></div>
+              
+              <div>
+                <div class="d-flex justify-content-between align-items-start mb-2 position-relative z-1">
+                  <div>
+                    <% if (device.type === 'light') { %>
+                      <i class="bi bi-lightbulb-fill fs-3 text-warning" id="icon-<%= device.id %>"></i>
+                    <% } else if (device.type === 'climate') { %>
+                      <i class="bi bi-snow fs-3 text-info" id="icon-<%= device.id %>"></i>
+                    <% } else if (device.type === 'media_player') { %>
+                      <i class="bi bi-tv-fill fs-3 text-primary" id="icon-<%= device.id %>"></i>
+                    <% } else { %>
+                      <i class="bi bi-plug-fill fs-3 text-success" id="icon-<%= device.id %>"></i>
+                    <% } %>
+                    
+                    <div class="d-flex align-items-center gap-2 mt-3 mb-1">
+                      <h4 class="fs-5 fw-bold text-white font-outfit m-0 text-truncate" style="max-width: 170px;" title="<%= device.name %>"><%= device.name %></h4>
+                      <button class="btn btn-sm btn-link text-secondary hover-text-danger border-0 p-0" onclick="deleteDevice('<%= device.id %>')" title="Excluir Dispositivo">
+                        <i class="bi bi-trash fs-6"></i>
+                      </button>
+                    </div>
+                    
+                    <span class="text-secondary small text-uppercase tracking-wider" style="font-size: 10px;">
+                      <%= device.type === 'climate' ? 'Ar Condicionado' : device.type === 'media_player' ? 'Smart TV / Mídia' : device.type === 'light' ? 'Luz' : 'Tomada / Interruptor' %> 
+                      <% if(device.protocol && device.protocol !== 'mock') { %>
+                        • <span class="text-fuchsia-500 font-mono"><%= device.protocol %></span>
+                      <% } %>
+                    </span>
+                  </div>
+                  
+                  <!-- Switch de Estado -->
+                  <div class="form-check form-switch p-0 m-0">
+                    <input class="form-check-input ms-0 cursor-pointer" type="checkbox" role="switch" 
+                           id="switch-<%= device.id %>" <%= device.state === 'on' ? 'checked' : '' %>
+                           onchange="toggleDevice('<%= device.id %>')">
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Controles extras dependendo do tipo -->
+              <div class="position-relative z-1 mt-4 pt-3 border-top border-secondary border-opacity-10">
+                <% if (device.type === 'light') { %>
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-secondary small">Brilho</span>
+                    <span class="fw-bold font-mono text-fuchsia-500" id="val-brightness-<%= device.id %>">
+                      <%= device.brightness %>%
+                    </span>
+                  </div>
+                  <input type="range" class="form-range" min="10" max="100" step="10" 
+                         value="<%= device.brightness %>" id="range-brightness-<%= device.id %>"
+                         oninput="updateBrightness(this, '<%= device.id %>')"
+                         onchange="saveBrightness('<%= device.id %>')">
+                         
+                <% } else if (device.type === 'climate') { %>
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-secondary small">Temperatura</span>
+                    <span class="fw-bold font-mono text-fuchsia-500" id="val-temp-<%= device.id %>">
+                      <%= device.temperature %>°C
+                    </span>
+                  </div>
+                  <input type="range" class="form-range" min="16" max="30" step="1" 
+                         value="<%= device.temperature %>" id="range-temp-<%= device.id %>"
+                         oninput="updateTemp(this, '<%= device.id %>')"
+                         onchange="saveTemp('<%= device.id %>')">
+                         
+                <% } else if (device.type === 'media_player') { %>
+                  <div class="d-flex align-items-center justify-content-between gap-2 mt-2">
+                    <span class="text-secondary small">Controles de Mídia</span>
+                    <div class="d-flex gap-1.5">
+                      <button class="btn-media-ctrl btn-sm d-flex align-items-center justify-content-center" onclick="sendMediaAction('<%= device.id %>', 'volume_down')" title="Volume -">
+                        <i class="bi bi-volume-down-fill"></i>
+                      </button>
+                      <button class="btn-media-ctrl btn-sm d-flex align-items-center justify-content-center" onclick="sendMediaAction('<%= device.id %>', 'play_pause')" title="Play / Pause">
+                        <i class="bi bi-play-pause-fill"></i>
+                      </button>
+                      <button class="btn-media-ctrl btn-sm d-flex align-items-center justify-content-center" onclick="sendMediaAction('<%= device.id %>', 'volume_up')" title="Volume +">
+                        <i class="bi bi-volume-up-fill"></i>
+                      </button>
+                    </div>
+                  </div>
+                  
+                <% } else { %>
+                  <span class="text-secondary small d-block">Tomada Inteligente ou Interruptor</span>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
+  </div>
+
+  <script>
+    // Gerenciamento do Modal de Adicionar Dispositivo
+    let addDeviceModalInstance = null;
+
+    function openAddDeviceModal() {
+      if (!addDeviceModalInstance) {
+        addDeviceModalInstance = new bootstrap.Modal(document.getElementById('addDeviceModal'));
+      }
+      document.getElementById('addDeviceForm').reset();
+      handleTypeChange();
+      handleProtocolChange();
+      addDeviceModalInstance.show();
+    }
+
+    function closeAddDeviceModal() {
+      if (addDeviceModalInstance) {
+        addDeviceModalInstance.hide();
+      }
+    }
+
+    function handleTypeChange() {
+      const type = document.getElementById('deviceType').value;
+      const bField = document.getElementById('brightnessUrlField');
+      const tField = document.getElementById('temperatureUrlField');
+      
+      bField.style.display = (type === 'light') ? 'block' : 'none';
+      tField.style.display = (type === 'climate') ? 'block' : 'none';
+    }
+
+    function handleProtocolChange() {
+      const protocol = document.getElementById('deviceProtocol').value;
+      const ipField = document.getElementById('ipField');
+      const customFields = document.getElementById('customFields');
+      
+      if (protocol === 'mock') {
+        ipField.style.display = 'none';
+        customFields.style.display = 'none';
+      } else if (protocol === 'custom') {
+        ipField.style.display = 'none';
+        customFields.style.display = 'block';
+      } else {
+        // roku, shelly, tasmota
+        ipField.style.display = 'block';
+        customFields.style.display = 'none';
+      }
+    }
+
+    function submitAddDevice() {
+      const name = document.getElementById('deviceName').value.trim();
+      const type = document.getElementById('deviceType').value;
+      const protocol = document.getElementById('deviceProtocol').value;
+      const ip = document.getElementById('deviceIp').value.trim();
+      const onUrl = document.getElementById('onUrl').value.trim();
+      const offUrl = document.getElementById('offUrl').value.trim();
+      const brightnessUrl = document.getElementById('brightnessUrl').value.trim();
+      const temperatureUrl = document.getElementById('temperatureUrl').value.trim();
+      
+      if (!name) {
+        alert('Por favor, informe o nome do dispositivo.');
+        return;
+      }
+      
+      fetch('/api/home-control/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, type, protocol, ip, onUrl, offUrl, brightnessUrl, temperatureUrl })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          closeAddDeviceModal();
+          window.location.reload();
+        } else {
+          alert('Erro: ' + data.error);
+        }
+      })
+      .catch(e => console.error(e));
+    }
+
+    // Excluir dispositivo
+    function deleteDevice(deviceId) {
+      if (window.Swal) {
+        Swal.fire({
+          title: 'Excluir dispositivo?',
+          text: 'Tem certeza que deseja remover este dispositivo do seu painel?',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#3085d6',
+          confirmButtonText: 'Sim, excluir',
+          cancelButtonText: 'Cancelar',
+          background: '#0f172a',
+          color: '#ffffff'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            executeDelete(deviceId);
+          }
+        });
+      } else {
+        if (confirm('Deseja excluir este dispositivo?')) {
+          executeDelete(deviceId);
+        }
+      }
+    }
+
+    function executeDelete(deviceId) {
+      fetch('/api/home-control/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceId })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          window.location.reload();
+        } else {
+          alert('Erro ao excluir dispositivo: ' + data.error);
+        }
+      })
+      .catch(e => console.error(e));
+    }
+
+    // Função para alterar o estado ligado/desligado
+    function toggleDevice(deviceId) {
+      const switchEl = document.getElementById(`switch-${deviceId}`);
+      const cardEl = document.getElementById(`card-${deviceId}`);
+      const state = switchEl.checked ? 'on' : 'off';
+      
+      if (switchEl.checked) {
+        cardEl.classList.add('active');
+      } else {
+        cardEl.classList.remove('active');
+      }
+      
+      fetch('/api/home-control/toggle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ deviceId, state })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) {
+          switchEl.checked = !switchEl.checked;
+          if (switchEl.checked) cardEl.classList.add('active');
+          else cardEl.classList.remove('active');
+          alert('Erro ao alterar dispositivo.');
+        }
+      })
+      .catch(e => {
+        console.error(e);
+        switchEl.checked = !switchEl.checked;
+        if (switchEl.checked) cardEl.classList.add('active');
+        else cardEl.classList.remove('active');
+      });
+    }
+
+    // Brilho para luzes
+    function updateBrightness(el, deviceId) {
+      document.getElementById(`val-brightness-${deviceId}`).textContent = el.value + '%';
+    }
+
+    function saveBrightness(deviceId) {
+      const el = document.getElementById(`range-brightness-${deviceId}`);
+      const brightness = el.value;
+      
+      fetch('/api/home-control/toggle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ deviceId, brightness })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) alert('Erro ao ajustar brilho.');
+      })
+      .catch(e => console.error(e));
+    }
+
+    // Temperatura para clima
+    function updateTemp(el, deviceId) {
+      document.getElementById(`val-temp-${deviceId}`).textContent = el.value + '°C';
+    }
+
+    function saveTemp(deviceId) {
+      const el = document.getElementById(`range-temp-${deviceId}`);
+      const temperature = el.value;
+      
+      fetch('/api/home-control/toggle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ deviceId, temperature })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) alert('Erro ao ajustar temperatura.');
+      })
+      .catch(e => console.error(e));
+    }
+
+    // Comandos de mídia (TV/Som)
+    function sendMediaAction(deviceId, mediaAction) {
+      fetch('/api/home-control/toggle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ deviceId, mediaAction })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) alert('Erro ao enviar comando de mídia.');
+      })
+      .catch(e => console.error(e));
+    }
+
+    // Sincronizar dispositivos reais na rede local
+    function discoverLocalDevices() {
+      if (window.Swal) {
+        Swal.fire({
+          title: 'Escaneando Rede...',
+          text: 'Por favor, aguarde enquanto fazemos a varredura da sua rede local (TVs Roku, Shelly, Tasmota).',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          },
+          background: '#0f172a',
+          color: '#ffffff'
+        });
+      }
+      
+      fetch('/api/home-control/discover', {
+        method: 'POST'
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          if (window.Swal) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Escaneado!',
+              text: `${data.count} dispositivos detectados na sua rede local.`,
+              background: '#0f172a',
+              color: '#ffffff',
+              confirmButtonColor: '#7c3aed'
+            }).then(() => {
+              window.location.reload();
+            });
+          } else {
+            alert(`${data.count} dispositivos detectados.`);
+            window.location.reload();
+          }
+        } else {
+          if (window.Swal) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Resultado do Escaneamento',
+              text: data.error || 'Nenhum dispositivo encontrado.',
+              background: '#0f172a',
+              color: '#ffffff',
+              confirmButtonColor: '#7c3aed'
+            });
+          } else {
+            alert('Aviso: ' + data.error);
+          }
+        }
+      })
+      .catch(e => {
+        console.error(e);
+        if (window.Swal) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Erro de Conexão',
+            text: 'Não foi possível comunicar com o servidor do Media Center.',
+            background: '#0f172a',
+            color: '#ffffff',
+            confirmButtonColor: '#7c3aed'
+          });
+        } else {
+          alert('Erro de Conexão.');
+        }
+      });
+    }
+  </script>
+
+  <!-- Bootstrap e dependências -->
+  <script src="/js/sweetalert2.all.min.js"></script>
+  <script src="/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

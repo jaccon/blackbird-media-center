@@ -16,7 +16,11 @@
           </a>
         </li>
         <% if (currentPath) { %>
-          <% currentPath.split('/').forEach((part, index) => { %>
+          <% 
+             const skipCount = (typeof userGroup !== 'undefined' && userGroup === 'customer') ? 2 : 0;
+             currentPath.split('/').forEach((part, index) => { 
+               if (index < skipCount) return;
+          %>
             <% if (part) { %>
               <li class="breadcrumb-item d-flex align-items-center text-white text-opacity-75">
                 <a href="/explorer?path=<%= currentPath.split('/').slice(0, index + 1).join('/') %>" class="text-white text-opacity-75 hover-text-white text-decoration-none transition-all-200">

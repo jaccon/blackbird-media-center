@@ -40,6 +40,31 @@
     </div>
   </div>
 
+  <!-- Modal Criar Pasta (Necessário por estar no header.ejs) -->
+  <div class="modal fade animate" id="createFolderModal" tabindex="-1" aria-labelledby="createFolderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-content-premium border-0">
+        <div class="modal-header modal-header-premium border-0">
+          <h5 class="modal-title font-outfit fw-bold text-white" id="createFolderModalLabel"><%= t('create_folder') %></h5>
+          <button type="button" class="btn-close btn-close-white" onclick="toggleCreateFolderModal()" aria-label="Close"></button>
+        </div>
+        <form action="/create-dir" method="POST" class="m-0">
+          <div class="modal-body p-4">
+            <input type="hidden" name="path" id="createFolderPathInput" value="">
+            <div class="mb-3">
+              <label for="dirNameInput" class="form-label text-uppercase text-secondary fw-semibold small tracking-wider mb-2"><%= t('folder_name') %></label>
+              <input type="text" id="dirNameInput" name="dirName" placeholder="Ex: Pasta Nova" required class="form-control input-premium">
+            </div>
+          </div>
+          <div class="modal-footer modal-footer-premium border-0">
+            <button type="button" class="btn btn-premium-secondary" onclick="toggleCreateFolderModal()"><%= t('cancel') %></button>
+            <button type="submit" class="btn btn-premium-primary border-0"><%= t('create') %></button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <div class="container-xl py-4 px-3">
     
     <!-- Título -->
@@ -50,7 +75,7 @@
 
     <!-- Container de Configurações -->
     <div class="row justify-content-center">
-      <div class="col-12 col-lg-8">
+      <div class="col-12">
         
         <div class="card border border-secondary border-opacity-10 shadow-lg" style="background-color: rgba(15, 23, 42, 0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
           <div class="card-header border-bottom border-secondary border-opacity-10 bg-transparent py-3 px-4">
@@ -69,69 +94,221 @@
             <% } %>
 
             <form action="/settings/save" method="POST">
-              
-              <!-- Configuração de Autenticação -->
-              <div class="mb-4 pb-4 border-bottom border-secondary border-opacity-10">
-                <div class="d-flex justify-content-between align-items-start gap-3">
-                  <div>
-                    <label class="form-label text-white fw-semibold mb-1" style="font-size: 15px;"><%= t('enable_auth') %></label>
-                    <p class="text-secondary small mb-0"><%= t('enable_auth_desc') %></p>
+              <div class="row">
+                
+                <!-- Coluna Esquerda: Configurações do Servidor e Segurança -->
+                <div class="col-12 col-md-6 border-end border-secondary border-opacity-10 pe-md-4">
+                  <h5 class="text-white fw-bold font-outfit mb-3 d-flex align-items-center gap-2" style="font-size: 15px;">
+                    <i class="bi bi-hdd-network text-gradient"></i> Configurações do Servidor
+                  </h5>
+                  
+                  <!-- Configuração de Autenticação -->
+                  <div class="mb-4 pb-4 border-bottom border-secondary border-opacity-10">
+                    <div class="d-flex justify-content-between align-items-start gap-3">
+                      <div>
+                        <label class="form-label text-white fw-semibold mb-1" style="font-size: 14px;"><%= t('enable_auth') %></label>
+                        <p class="text-secondary small mb-0" style="font-size: 11px;"><%= t('enable_auth_desc') %></p>
+                      </div>
+                      <div class="form-check form-switch m-0 fs-5">
+                        <input class="form-check-input cursor-pointer" type="checkbox" name="authEnabled" id="authEnabled" value="true" <%= config.authEnabled ? 'checked' : '' %>>
+                      </div>
+                    </div>
                   </div>
-                  <div class="form-check form-switch m-0 fs-5">
-                    <input class="form-check-input cursor-pointer" type="checkbox" name="authEnabled" id="authEnabled" value="true" <%= config.authEnabled ? 'checked' : '' %>>
+
+                  <!-- Senha de Login -->
+                  <div class="mb-4 pb-4 border-bottom border-secondary border-opacity-10" id="passwordSection">
+                    <label for="loginPassword" class="form-label text-white fw-semibold mb-1" style="font-size: 14px;"><%= t('login_password') %></label>
+                    <p class="text-secondary small mb-3" style="font-size: 11px;"><%- t('login_password_desc') %></p>
+                    <div class="position-relative" style="max-width: 400px;">
+                      <input type="password" id="loginPassword" name="loginPassword" value="<%= config.loginPassword %>" placeholder="••••••••" required class="form-control input-premium pe-5">
+                      <button type="button" onclick="togglePasswordVisibility()" class="btn btn-link position-absolute end-0 top-50 translate-y-middle text-secondary hover-text-white border-0 py-0 px-3" style="margin-top: -20px;">
+                        <i class="bi bi-eye-slash" id="togglePasswordIcon"></i>
+                      </button>
+                    </div>
                   </div>
+
+                  <!-- Arquivos Permitidos para Upload -->
+                  <div class="mb-4 pb-4 border-bottom border-secondary border-opacity-10">
+                    <label for="allowedExtensions" class="form-label text-white fw-semibold mb-1" style="font-size: 14px;"><%= t('allowed_extensions') %></label>
+                    <p class="text-secondary small mb-3" style="font-size: 11px;"><%= t('allowed_extensions_desc') %></p>
+                    <input type="text" id="allowedExtensions" name="allowedExtensions" value="<%= config.allowedExtensions %>" placeholder="Ex: .mp4, .mp3, .jpg, .png, .mkv, .avi" required class="form-control input-premium mb-2">
+                    <div class="d-flex flex-wrap gap-1.5 mt-2">
+                      <span class="badge bg-secondary bg-opacity-25 border border-secondary border-opacity-10 text-secondary cursor-pointer hover-bg-secondary transition-all-200" onclick="appendExtension('.mp4')">.mp4</span>
+                      <span class="badge bg-secondary bg-opacity-25 border border-secondary border-opacity-10 text-secondary cursor-pointer hover-bg-secondary transition-all-200" onclick="appendExtension('.mkv')">.mkv</span>
+                      <span class="badge bg-secondary bg-opacity-25 border border-secondary border-opacity-10 text-secondary cursor-pointer hover-bg-secondary transition-all-200" onclick="appendExtension('.mp3')">.mp3</span>
+                      <span class="badge bg-secondary bg-opacity-25 border border-secondary border-opacity-10 text-secondary cursor-pointer hover-bg-secondary transition-all-200" onclick="appendExtension('.jpg')">.jpg</span>
+                      <span class="badge bg-secondary bg-opacity-25 border border-secondary border-opacity-10 text-secondary cursor-pointer hover-bg-secondary transition-all-200" onclick="appendExtension('.png')">.png</span>
+                      <span class="badge bg-secondary bg-opacity-25 border border-secondary border-opacity-10 text-secondary cursor-pointer hover-bg-secondary transition-all-200" onclick="appendExtension('.pdf')">.pdf</span>
+                      <span class="badge bg-secondary bg-opacity-25 border border-secondary border-opacity-10 text-secondary cursor-pointer hover-bg-secondary transition-all-200" onclick="resetExtensions()">Restaurar</span>
+                    </div>
+                  </div>
+
+                  <!-- Endereço Personalizado da Aplicação -->
+                  <div class="mb-4 pb-4 border-bottom border-secondary border-opacity-10">
+                    <label for="appAddress" class="form-label text-white fw-semibold mb-1" style="font-size: 14px;"><%= t('app_address') %></label>
+                    <p class="text-secondary small mb-3" style="font-size: 11px;"><%= t('app_address_desc') %></p>
+                    <input type="text" id="appAddress" name="appAddress" value="<%= config.appAddress || '' %>" placeholder="Ex: http://192.168.1.100:5555" class="form-control input-premium" style="max-width: 400px;">
+                  </div>
+
+                  <!-- Idioma do Sistema -->
+                  <div class="mb-3">
+                    <label for="language" class="form-label text-white fw-semibold mb-1" style="font-size: 14px;"><%= t('language') %></label>
+                    <p class="text-secondary small mb-3" style="font-size: 11px;"><%= t('language_desc') %></p>
+                    <select id="language" name="language" class="form-select form-control input-premium pe-5" style="max-width: 400px; background-color: rgba(15, 23, 42, 0.45);">
+                      <option value="en" <%= config.language === 'en' ? 'selected' : '' %>>English</option>
+                      <option value="pt" <%= config.language === 'pt' ? 'selected' : '' %>>Português</option>
+                      <option value="es" <%= config.language === 'es' ? 'selected' : '' %>>Español</option>
+                    </select>
+                  </div>
+
+                  <!-- Preferências de Layout -->
+                  <div class="mb-4 pb-4 mt-4 border-top border-secondary border-opacity-10 pt-4">
+                    <label class="form-label text-white fw-semibold mb-1" style="font-size: 14px;">Layout Full Width (Tela Cheia)</label>
+                    <p class="text-secondary small mb-3" style="font-size: 11px;">Expandir o layout da aplicação para ocupar toda a largura da tela no desktop.</p>
+                    <div class="form-check form-switch m-0 fs-5">
+                      <input class="form-check-input cursor-pointer" type="checkbox" name="layoutFullWidth" id="layoutFullWidth" value="true" <%= config.layoutFullWidth ? 'checked' : '' %>>
+                    </div>
+                  </div>
+
+                  <!-- Preferências de Tema -->
+                  <div class="mb-4 pb-4 mt-4 border-top border-secondary border-opacity-10 pt-4">
+                    <label for="theme" class="form-label text-white fw-semibold mb-1" style="font-size: 14px;">Tema do Sistema</label>
+                    <p class="text-secondary small mb-3" style="font-size: 11px;">Selecione o esquema de cores e estilo visual para toda a aplicação.</p>
+                    <select id="theme" name="theme" class="form-select form-control input-premium pe-5" style="max-width: 400px; background-color: rgba(15, 23, 42, 0.45);">
+                      <option value="default" <%= (config.theme === 'default' || !config.theme) ? 'selected' : '' %>>Dark Blue (Padrão)</option>
+                      <option value="neon_midnight" <%= config.theme === 'neon_midnight' ? 'selected' : '' %>>Neon Midnight (Preto Absoluto & Neon)</option>
+                      <option value="emerald_abyss" <%= config.theme === 'emerald_abyss' ? 'selected' : '' %>>Emerald Abyss (Verde Floresta & Esmeralda)</option>
+                    </select>
+                  </div>
+
                 </div>
-              </div>
 
-              <!-- Senha de Login -->
-              <div class="mb-4 pb-4 border-bottom border-secondary border-opacity-10" id="passwordSection">
-                <label for="loginPassword" class="form-label text-white fw-semibold mb-1" style="font-size: 15px;"><%= t('login_password') %></label>
-                <p class="text-secondary small mb-3"><%- t('login_password_desc') %></p>
-                
-                <div class="position-relative" style="max-width: 400px;">
-                  <input type="password" id="loginPassword" name="loginPassword" value="<%= config.loginPassword %>" placeholder="••••••••" required class="form-control input-premium pe-5">
-                  <button type="button" onclick="togglePasswordVisibility()" class="btn btn-link position-absolute end-0 top-50 translate-y-middle text-secondary hover-text-white border-0 py-0 px-3" style="margin-top: -20px;">
-                    <i class="bi bi-eye-slash" id="togglePasswordIcon"></i>
-                  </button>
+                <!-- Coluna Direita: Configurações do Agente de AI e Scheduler -->
+                <div class="col-12 col-md-6 ps-md-4">
+                  
+                  <h5 class="text-white fw-bold font-outfit mb-3 d-flex align-items-center gap-2" style="font-size: 15px;">
+                    <i class="bi bi-robot text-gradient"></i> Configurações do Agente de AI
+                  </h5>
+
+                  <!-- Chave API Hugging Face -->
+                  <div class="mb-4">
+                    <label for="hfToken" class="form-label text-white fw-semibold small mb-1">Chave API Hugging Face (Chat AI)</label>
+                    <input type="password" id="hfToken" name="hfToken" value="<%= config.hfToken || '' %>" placeholder="hf_..." class="form-control input-premium">
+                    <div class="form-text text-secondary" style="font-size: 10px;">Token pessoal de acesso (Read/Write) do Hugging Face.</div>
+                  </div>
+
+                  <div class="row g-3 mb-4">
+                    <!-- Nome do Agente -->
+                    <div class="col-md-6">
+                      <label for="agentName" class="form-label text-white fw-semibold small mb-1">Nome do Agente</label>
+                      <input type="text" id="agentName" name="agentName" value="<%= config.agentName || 'Assistente Inteligente' %>" placeholder="Ex: Winston" class="form-control input-premium">
+                    </div>
+                    
+                    <!-- Modelo do Agente -->
+                    <div class="col-md-6">
+                      <label for="agentModel" class="form-label text-white fw-semibold small mb-1">Modelo AI</label>
+                      <input type="text" id="agentModel" name="agentModel" value="<%= config.agentModel || 'meta-llama/Llama-3.1-8B-Instruct' %>" placeholder="Ex: meta-llama/Llama-3.1-8B-Instruct" class="form-control input-premium">
+                    </div>
+
+                    <!-- Caminho da Pasta RAG -->
+                    <div class="col-md-6">
+                      <label for="agentRagDir" class="form-label text-white fw-semibold small mb-1">Pasta RAG</label>
+                      <input type="text" id="agentRagDir" name="agentRagDir" value="<%= config.agentRagDir || 'public/shared' %>" placeholder="Ex: public/shared" class="form-control input-premium">
+                    </div>
+
+                    <!-- Temperatura -->
+                    <div class="col-md-6">
+                      <label for="agentTemperature" class="form-label text-white fw-semibold small mb-1">Temperatura</label>
+                      <input type="number" id="agentTemperature" name="agentTemperature" value="<%= config.agentTemperature !== undefined ? config.agentTemperature : 0.7 %>" min="0" max="1.5" step="0.1" class="form-control input-premium">
+                    </div>
+
+                    <!-- Skills do Agente -->
+                    <div class="col-12">
+                      <label for="agentSkills" class="form-label text-white fw-semibold small mb-1">Habilidades do Agente (Skills)</label>
+                      <textarea id="agentSkills" name="agentSkills" rows="2" placeholder="Ex: Especialista em recomendar filmes..." class="form-control input-premium"><%= config.agentSkills || 'Especialista em recomendação de mídias, automação residencial e suporte técnico geral.' %></textarea>
+                    </div>
+                  </div>
+
+                  <!-- Seção Scheduler -->
+                  <div class="border-top border-secondary border-opacity-10 pt-4 mt-4">
+                    <h5 class="text-white fw-bold font-outfit mb-3 d-flex align-items-center gap-2" style="font-size: 15px;">
+                      <i class="bi bi-clock-history text-gradient"></i> Configuração do Validador (Scheduler)
+                    </h5>
+                    
+                    <div class="mb-4">
+                      <label for="schedulerInterval" class="form-label text-white fw-semibold small mb-1">Intervalo de Validação (Minutos)</label>
+                      <p class="text-secondary small mb-2" style="font-size: 11px;">Frequência com que o scheduler automático analisará e validará as regras em segundo plano.</p>
+                      <input type="number" id="schedulerInterval" name="schedulerInterval" value="<%= config.schedulerInterval !== undefined ? config.schedulerInterval : 10 %>" min="1" max="1440" required class="form-control input-premium" style="max-width: 150px;">
+                    </div>
+
+                    <div class="mb-3">
+                      <label class="form-label text-white fw-semibold small mb-2">Rotinas de Validação Ativas:</label>
+                      
+                      <!-- Validar Features -->
+                      <div class="form-check form-switch mb-2.5">
+                        <input class="form-check-input cursor-pointer" type="checkbox" name="schedulerCheckFeatures" id="schedulerCheckFeatures" value="true" <%= config.schedulerCheckFeatures ? 'checked' : '' %>>
+                        <label class="form-check-label text-secondary small" for="schedulerCheckFeatures">Validar Integridade de Pastas e Mídias (Features)</label>
+                      </div>
+
+                      <!-- Validar Tasks -->
+                      <div class="form-check form-switch mb-2.5">
+                        <input class="form-check-input cursor-pointer" type="checkbox" name="schedulerCheckTasks" id="schedulerCheckTasks" value="true" <%= config.schedulerCheckTasks ? 'checked' : '' %>>
+                        <label class="form-check-label text-secondary small" for="schedulerCheckTasks">Validar Tarefas Atrasadas (Kanban Tasks)</label>
+                      </div>
+
+                      <!-- Validar Lembretes -->
+                      <div class="form-check form-switch mb-2.5">
+                        <input class="form-check-input cursor-pointer" type="checkbox" name="schedulerCheckReminders" id="schedulerCheckReminders" value="true" <%= config.schedulerCheckReminders ? 'checked' : '' %>>
+                        <label class="form-check-label text-secondary small" for="schedulerCheckReminders">Validar Lembretes Próximos ao Vencimento (Reminders)</label>
+                      </div>
+
+                      <!-- Limitar Alertas Diários de AI -->
+                      <div class="form-check form-switch">
+                        <input class="form-check-input cursor-pointer" type="checkbox" name="limitAlertsOncePerDay" id="limitAlertsOncePerDay" value="true" <%= config.limitAlertsOncePerDay ? 'checked' : '' %>>
+                        <label class="form-check-label text-secondary small" for="limitAlertsOncePerDay">Limitar Alertas Diários de AI (1x por dia para economizar tokens)</label>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  <!-- Seção Telegram Bot -->
+                  <div class="border-top border-secondary border-opacity-10 pt-4 mt-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                      <h5 class="text-white fw-bold font-outfit m-0 d-flex align-items-center gap-2" style="font-size: 15px;">
+                        <i class="bi bi-telegram text-gradient"></i> Configuração do Telegram Bot
+                      </h5>
+                      <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-premium-secondary btn-sm font-outfit py-1 px-2.5" onclick="runTelegramSelfTest()" style="font-size: 12px; border-radius: 8px;">
+                          <i class="bi bi-shield-check me-1 text-warning"></i>Self-Test
+                        </button>
+                        <button type="button" class="btn btn-premium-secondary btn-sm font-outfit py-1 px-2.5" onclick="showTelegramLogs()" style="font-size: 12px; border-radius: 8px;">
+                          <i class="bi bi-journal-text me-1 text-info"></i>Logs
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <!-- Ativar Bot -->
+                    <div class="form-check form-switch mb-3">
+                      <input class="form-check-input cursor-pointer" type="checkbox" name="telegramBotEnabled" id="telegramBotEnabled" value="true" <%= config.telegramBotEnabled ? 'checked' : '' %>>
+                      <label class="form-check-label text-secondary small" for="telegramBotEnabled">Ativar Integração com Telegram Bot</label>
+                    </div>
+
+                    <!-- Token do Bot -->
+                    <div class="mb-3">
+                      <label for="telegramBotToken" class="form-label text-white fw-semibold small mb-1">Token do Telegram Bot (BotFather)</label>
+                      <input type="password" id="telegramBotToken" name="telegramBotToken" value="<%= config.telegramBotToken || '' %>" placeholder="Token fornecido pelo @BotFather..." class="form-control input-premium">
+                    </div>
+
+                    <!-- Usuários Autorizados -->
+                    <div class="mb-3">
+                      <label for="telegramAllowedUsers" class="form-label text-white fw-semibold small mb-1">Usuários Autorizados (Telegram Username - Separado por Vírgulas)</label>
+                      <p class="text-secondary small mb-2" style="font-size: 10px;">Deixe vazio para permitir que qualquer usuário interaja, ou digite os usernames (ex: jaccon, admin) para restringir o acesso.</p>
+                      <input type="text" id="telegramAllowedUsers" name="telegramAllowedUsers" value="<%= config.telegramAllowedUsers || '' %>" placeholder="Ex: jaccon, Winston1" class="form-control input-premium">
+                    </div>
+                  </div>
+
                 </div>
-              </div>
 
-              <!-- Arquivos Permitidos para Upload -->
-              <div class="mb-4 pb-2">
-                <label for="allowedExtensions" class="form-label text-white fw-semibold mb-1" style="font-size: 15px;"><%= t('allowed_extensions') %></label>
-                <p class="text-secondary small mb-3"><%= t('allowed_extensions_desc') %></p>
-                
-                <input type="text" id="allowedExtensions" name="allowedExtensions" value="<%= config.allowedExtensions %>" placeholder="Ex: .mp4, .mp3, .jpg, .png, .mkv, .avi" required class="form-control input-premium mb-2">
-                
-                <div class="d-flex flex-wrap gap-1.5 mt-2">
-                  <span class="badge bg-secondary bg-opacity-25 border border-secondary border-opacity-10 text-secondary cursor-pointer hover-bg-secondary transition-all-200" onclick="appendExtension('.mp4')">.mp4</span>
-                  <span class="badge bg-secondary bg-opacity-25 border border-secondary border-opacity-10 text-secondary cursor-pointer hover-bg-secondary transition-all-200" onclick="appendExtension('.mkv')">.mkv</span>
-                  <span class="badge bg-secondary bg-opacity-25 border border-secondary border-opacity-10 text-secondary cursor-pointer hover-bg-secondary transition-all-200" onclick="appendExtension('.mp3')">.mp3</span>
-                  <span class="badge bg-secondary bg-opacity-25 border border-secondary border-opacity-10 text-secondary cursor-pointer hover-bg-secondary transition-all-200" onclick="appendExtension('.jpg')">.jpg</span>
-                  <span class="badge bg-secondary bg-opacity-25 border border-secondary border-opacity-10 text-secondary cursor-pointer hover-bg-secondary transition-all-200" onclick="appendExtension('.png')">.png</span>
-                  <span class="badge bg-secondary bg-opacity-25 border border-secondary border-opacity-10 text-secondary cursor-pointer hover-bg-secondary transition-all-200" onclick="appendExtension('.pdf')">.pdf</span>
-                  <span class="badge bg-secondary bg-opacity-25 border border-secondary border-opacity-10 text-secondary cursor-pointer hover-bg-secondary transition-all-200" onclick="resetExtensions()">Restaurar Padrão</span>
-                </div>
-              </div>
-
-              <!-- Endereço Personalizado da Aplicação -->
-              <div class="mb-4 pb-2 border-top border-secondary border-opacity-10 pt-4">
-                <label for="appAddress" class="form-label text-white fw-semibold mb-1" style="font-size: 15px;"><%= t('app_address') %></label>
-                <p class="text-secondary small mb-3"><%= t('app_address_desc') %></p>
-                
-                <input type="text" id="appAddress" name="appAddress" value="<%= config.appAddress || '' %>" placeholder="Ex: http://192.168.1.100:5555" class="form-control input-premium mb-2" style="max-width: 400px;">
-              </div>
-
-              <!-- Idioma do Sistema -->
-              <div class="mb-4 pb-2 border-top border-secondary border-opacity-10 pt-4">
-                <label for="language" class="form-label text-white fw-semibold mb-1" style="font-size: 15px;"><%= t('language') %></label>
-                <p class="text-secondary small mb-3"><%= t('language_desc') %></p>
-                
-                <select id="language" name="language" class="form-select form-control input-premium pe-5" style="max-width: 400px; background-color: rgba(15, 23, 42, 0.45);">
-                  <option value="en" <%= config.language === 'en' ? 'selected' : '' %>>English</option>
-                  <option value="pt" <%= config.language === 'pt' ? 'selected' : '' %>>Português</option>
-                  <option value="es" <%= config.language === 'es' ? 'selected' : '' %>>Español</option>
-                </select>
               </div>
 
               <!-- Botões de Ação -->
@@ -145,46 +322,107 @@
           </div>
         </div>
 
-        <!-- Card de Backup e Restauração -->
-        <div class="card card-premium p-4 mt-4 animate-fade-in">
-          <div class="card-body">
+        <!-- Card de Backup e Restauração Geral -->
+        <div class="card card-premium p-4 mt-4 animate-fade-in" style="height: auto !important;">
+          <div class="card-body" style="display: block !important; height: auto !important;">
             
             <!-- Título -->
             <div class="mb-4">
-              <h2 class="fs-4 fw-bold text-white font-outfit m-0"><%= t('backup_restore') %></h2>
-              <p class="text-secondary small m-0 mt-1"><%= t('backup_restore_desc') %></p>
+              <h2 class="fs-4 fw-bold text-white font-outfit m-0">Backup e Restauração Geral</h2>
+              <p class="text-secondary small m-0 mt-1">Gere backups completos ou personalizados das configurações do servidor, do banco de dados do Kanban e de todas as mídias de anexo.</p>
             </div>
 
-            <div class="row g-4 pt-3 border-top border-secondary border-opacity-10">
+            <!-- Seção de Exportar -->
+            <div class="border-top border-secondary border-opacity-10 pt-4 mt-3">
+              <h5 class="text-white fw-semibold mb-2" style="font-size: 16px;">Exportar Backup</h5>
+              <p class="text-secondary small mb-3">Selecione os módulos que deseja incluir no arquivo de backup:</p>
               
-              <!-- Seção de Exportar -->
-              <div class="col-md-6 border-end border-secondary border-opacity-10 pe-md-4">
-                <h5 class="text-white fw-semibold mb-2" style="font-size: 16px;"><%= t('export_backup') %></h5>
-                <p class="text-secondary small mb-4">Faça o download de todas as configurações, favoritos, câmeras e históricos salvos em um único arquivo de backup JSON.</p>
-                <a href="/settings/export" class="btn btn-premium-primary border-0 px-4 py-2 text-decoration-none d-inline-flex align-items-center gap-2">
-                  <i class="bi bi-download"></i>
-                  <span><%= t('export_backup') %></span>
-                </a>
-              </div>
-
-              <!-- Seção de Importar -->
-              <div class="col-md-6 ps-md-4">
-                <h5 class="text-white fw-semibold mb-2" style="font-size: 16px;"><%= t('import_backup') %></h5>
-                <p class="text-secondary small mb-3">Restaurar configurações e bases de dados a partir de um arquivo de backup JSON previamente exportado.</p>
-                
-                <form action="/settings/import" method="POST" enctype="multipart/form-data">
-                  <div class="mb-3">
-                    <label for="backupFile" class="form-label text-secondary small mb-1.5"><%= t('select_backup_file') %></label>
-                    <input type="file" id="backupFile" name="backupFile" accept=".json" required class="form-control input-premium py-1.5">
+              <form action="/settings/export" method="GET" class="m-0">
+                <div class="mb-3 d-flex flex-column gap-2" style="max-width: 600px;">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input cursor-pointer" type="checkbox" name="includeConfig" id="includeConfig" value="true" checked>
+                    <label class="form-check-label text-secondary small" for="includeConfig">Configurações Gerais (Favoritos, Câmeras, Logs, Histórico)</label>
                   </div>
-                  <button type="submit" class="btn btn-premium-secondary px-4 py-2 border-0 d-inline-flex align-items-center gap-2">
-                    <i class="bi bi-upload"></i>
-                    <span><%= t('import_backup') %></span>
-                  </button>
-                </form>
-              </div>
-
+                  <div class="form-check form-switch">
+                    <input class="form-check-input cursor-pointer" type="checkbox" name="includeKanban" id="includeKanban" value="true" checked>
+                    <label class="form-check-label text-secondary small" for="includeKanban">Banco de Dados do Kanban (Tarefas, Projetos, Colunas)</label>
+                  </div>
+                  <div class="form-check form-switch">
+                    <input class="form-check-input cursor-pointer" type="checkbox" name="includeAssets" id="includeAssets" value="true" checked>
+                    <label class="form-check-label text-secondary small" for="includeAssets">Arquivos de Mídia do Kanban (Fotos/Vídeos de Todos os Usuários)</label>
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-premium-primary border-0 px-4 py-2 d-inline-flex align-items-center gap-2">
+                  <i class="bi bi-download"></i>
+                  <span>Exportar Backup (.ZIP)</span>
+                </button>
+              </form>
             </div>
+
+            <!-- Seção de Importar -->
+            <div class="border-top border-secondary border-opacity-10 mt-4 pt-4">
+              <h5 class="text-white fw-semibold mb-2" style="font-size: 16px;">Importar Backup</h5>
+              <p class="text-secondary small mb-3">Selecione o arquivo de backup para restaurar. Suporta tanto backups de configurações clássicos (.JSON) quanto backups gerais (.ZIP).</p>
+              
+              <form action="/settings/import" method="POST" enctype="multipart/form-data" class="m-0" style="max-width: 600px;">
+                <div class="mb-3">
+                  <label for="backupFile" class="form-label text-secondary small mb-1.5">Selecione o Arquivo (.ZIP ou .JSON)</label>
+                  <input type="file" id="backupFile" name="backupFile" accept=".json,.zip" required class="form-control input-premium py-1.5">
+                </div>
+                <button type="submit" class="btn btn-premium-secondary px-4 py-2 border-0 d-inline-flex align-items-center gap-2">
+                  <i class="bi bi-upload"></i>
+                  <span>Importar Backup</span>
+                </button>
+              </form>
+            </div>
+
+            <!-- Seção de Backups Locais (Dumps) -->
+            <% if (typeof localBackups !== 'undefined' && localBackups && localBackups.length > 0) { %>
+              <div class="border-top border-secondary border-opacity-10 mt-5 pt-4">
+                <h5 class="text-white fw-bold font-outfit mb-3 d-flex align-items-center gap-2" style="font-size: 15px;">
+                  <i class="bi bi-folder2-open text-gradient"></i> Backups Locais salvos (Dumps)
+                </h5>
+                <p class="text-secondary small mb-3">Estes backups foram gerados e armazenados no servidor. Você pode restaurá-los diretamente ou baixá-los para sua máquina.</p>
+                
+                <div class="table-responsive">
+                  <table class="table table-dark table-striped table-hover align-middle m-0 font-outfit" style="font-size: 13px;">
+                    <thead>
+                      <tr>
+                        <th>Nome do Arquivo</th>
+                        <th>Data de Criação</th>
+                        <th>Tamanho</th>
+                        <th class="text-end">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% localBackups.forEach(backup => { %>
+                        <tr>
+                          <td style="color: #cbd5e1;"><i class="bi <%= backup.name.endsWith('.zip') ? 'bi-file-earmark-zip text-warning' : 'bi-filetype-json text-info' %> me-2"></i><%= backup.name %></td>
+                          <td class="text-secondary"><%= new Date(backup.createdAt).toLocaleString('pt-BR') %></td>
+                          <td class="text-secondary"><%= (backup.size / 1024 / 1024).toFixed(2) %> MB</td>
+                          <td class="text-end">
+                            <div class="d-inline-flex gap-2">
+                              <!-- Download -->
+                              <a href="/api/backups/download/<%= backup.name %>" class="btn btn-premium-secondary btn-sm p-1.5" title="Download">
+                                <i class="bi bi-download"></i>
+                              </a>
+                              <!-- Restore -->
+                              <button type="button" class="btn btn-premium-secondary btn-sm p-1.5" onclick="restoreLocalBackup('<%= backup.name %>')" title="Restaurar">
+                                <i class="bi bi-arrow-counterclockwise text-success"></i>
+                              </button>
+                              <!-- Delete -->
+                              <button type="button" class="btn btn-premium-secondary btn-sm p-1.5" onclick="deleteLocalBackup('<%= backup.name %>')" title="Excluir">
+                                <i class="bi bi-trash text-danger"></i>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      <% }) %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            <% } %>
 
           </div>
         </div>
@@ -211,6 +449,118 @@
         } else {
           info.classList.add('d-none');
           info.innerHTML = '';
+        }
+      });
+    }
+
+    function restoreLocalBackup(filename) {
+      Swal.fire({
+        title: 'Restaurar backup?',
+        text: `Tem certeza que deseja restaurar o backup "${filename}"? Isso substituirá as configurações/tarefas atuais do servidor!`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#7c3aed',
+        cancelButtonColor: '#475569',
+        confirmButtonText: 'Sim, restaurar!',
+        cancelButtonText: 'Cancelar',
+        background: '#0f172a',
+        color: '#ffffff'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          Swal.fire({
+            title: 'Restaurando...',
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            }
+          });
+          
+          fetch(`/api/backups/restore/${encodeURIComponent(filename)}`, {
+            method: 'POST'
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              Swal.fire({
+                icon: 'success',
+                title: 'Restaurado!',
+                text: 'O backup foi restaurado com sucesso. Recarregando a página...',
+                background: '#0f172a',
+                color: '#ffffff'
+              }).then(() => {
+                window.location.reload();
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: data.error || 'Falha ao restaurar backup.',
+                background: '#0f172a',
+                color: '#ffffff'
+              });
+            }
+          })
+          .catch(err => {
+            Swal.fire({
+              icon: 'error',
+              title: 'Erro',
+              text: err.message || 'Falha ao conectar com o servidor.',
+              background: '#0f172a',
+              color: '#ffffff'
+            });
+          });
+        }
+      });
+    }
+
+    function deleteLocalBackup(filename) {
+      Swal.fire({
+        title: 'Excluir backup?',
+        text: `Tem certeza que deseja excluir permanentemente o backup "${filename}" do servidor?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#475569',
+        confirmButtonText: 'Excluir',
+        cancelButtonText: 'Cancelar',
+        background: '#0f172a',
+        color: '#ffffff'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(`/api/backups/${encodeURIComponent(filename)}`, {
+            method: 'DELETE'
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              Swal.fire({
+                icon: 'success',
+                title: 'Excluído!',
+                text: 'O backup foi removido do servidor.',
+                background: '#0f172a',
+                color: '#ffffff'
+              }).then(() => {
+                window.location.reload();
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: data.error || 'Falha ao excluir backup.',
+                background: '#0f172a',
+                color: '#ffffff'
+              });
+            }
+          })
+          .catch(err => {
+            Swal.fire({
+              icon: 'error',
+              title: 'Erro',
+              text: err.message || 'Falha ao conectar com o servidor.',
+              background: '#0f172a',
+              color: '#ffffff'
+            });
+          });
         }
       });
     }
@@ -245,6 +595,132 @@
     // Reseta para as extensões padrão
     function resetExtensions() {
       document.getElementById('allowedExtensions').value = '.mp4, .mp3, .jpg, .png, .mkv, .avi, .jpeg, .gif, .wav';
+    }
+
+    function runTelegramSelfTest() {
+      Swal.fire({
+        title: 'Running Self-Test...',
+        text: 'Checking Telegram connection, Hugging Face, and database integrity.',
+        allowOutsideClick: false,
+        background: '#0f172a',
+        color: '#ffffff',
+        didOpen: () => {
+          Swal.showLoading();
+          fetch('/api/telegram/selftest')
+            .then(res => res.json())
+            .then(data => {
+              let htmlContent = `
+                <div class="text-start fs-6 font-outfit" style="color: #cbd5e1;">
+                  <div class="mb-2"><strong>Telegram Bot API:</strong> ${data.telegramApiOk ? '<span class="text-success">✅ Connected</span>' : '<span class="text-danger">❌ Failed</span>'}</div>
+                  ${data.telegramBotInfo ? `<div class="mb-2 ps-3 small text-secondary">Bot: @${data.telegramBotInfo.username} (${data.telegramBotInfo.first_name})</div>` : ''}
+                  ${data.telegramError ? `<div class="mb-2 ps-3 small text-danger">Error: ${data.telegramError}</div>` : ''}
+                  
+                  <div class="mb-2"><strong>Hugging Face Router:</strong> ${data.huggingFaceOk ? '<span class="text-success">✅ Connected</span>' : '<span class="text-danger">❌ Failed</span>'}</div>
+                  ${data.huggingFaceError ? `<div class="mb-2 ps-3 small text-danger">Error: ${data.huggingFaceError}</div>` : ''}
+                  
+                  <div class="mb-2"><strong>Database Health:</strong></div>
+                  <ul class="list-unstyled ps-3 small text-secondary">
+                    <li>${data.databases.config ? '✅' : '❌'} config.json</li>
+                    <li>${data.databases.tasks ? '✅' : '❌'} tasks.json</li>
+                    <li>${data.databases.notes ? '✅' : '❌'} notes.json</li>
+                    <li>${data.databases.subscribers ? '✅' : '❌'} telegram_subscribers.json</li>
+                  </ul>
+                  <div class="mt-2"><strong>Active Subscribers:</strong> ${data.subscribersCount} user(s)</div>
+                </div>
+              `;
+              Swal.fire({
+                title: 'Self-Test Results',
+                html: htmlContent,
+                icon: (data.telegramApiOk && data.huggingFaceOk) ? 'success' : 'warning',
+                background: '#0f172a',
+                color: '#ffffff',
+                confirmButtonColor: '#7c3aed'
+              });
+            })
+            .catch(err => {
+              Swal.fire({
+                icon: 'error',
+                title: 'Self-Test Failed',
+                text: err.message,
+                background: '#0f172a',
+                color: '#ffffff'
+              });
+            });
+        }
+      });
+    }
+
+    function showTelegramLogs() {
+      Swal.fire({
+        title: 'Loading Logs...',
+        allowOutsideClick: false,
+        background: '#0f172a',
+        color: '#ffffff',
+        didOpen: () => {
+          Swal.showLoading();
+          fetch('/api/telegram/logs')
+            .then(res => res.json())
+            .then(data => {
+              if (!data.success || !data.logs || data.logs.length === 0) {
+                Swal.fire({
+                  icon: 'info',
+                  title: 'Telegram AI Logs',
+                  text: 'No logs recorded yet. Send a message to the bot to generate logs!',
+                  background: '#0f172a',
+                  color: '#ffffff',
+                  confirmButtonColor: '#7c3aed'
+                });
+                return;
+              }
+              
+              let htmlContent = `
+                <div style="max-height: 400px; overflow-y: auto; text-align: left; font-size: 12.5px; color: #cbd5e1; font-family: Outfit, sans-serif; padding-right: 5px;">
+                  <table class="table table-dark table-striped table-hover m-0">
+                    <thead>
+                      <tr>
+                        <th>User</th>
+                        <th>Query</th>
+                        <th>AI Reply</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${data.logs.map(log => {
+                        const date = new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        const userLabel = log.username ? `@${log.username}` : log.firstName;
+                        return `
+                          <tr>
+                            <td class="text-nowrap" style="color: #a78bfa;"><strong>${userLabel}</strong><br><small class="text-secondary" style="font-size: 10px;">${date}</small></td>
+                            <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: normal;">${log.message}</td>
+                            <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: normal; color: #94a3b8;">${log.response.replace(/Command:.*/g, '').substring(0, 150)}${log.response.length > 150 ? '...' : ''}</td>
+                          </tr>
+                        `;
+                      }).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              `;
+              
+              Swal.fire({
+                title: 'Telegram AI Logs',
+                html: htmlContent,
+                width: '750px',
+                background: '#0f172a',
+                color: '#ffffff',
+                confirmButtonColor: '#7c3aed',
+                confirmButtonText: 'Close'
+              });
+            })
+            .catch(err => {
+              Swal.fire({
+                icon: 'error',
+                title: 'Failed to load logs',
+                text: err.message,
+                background: '#0f172a',
+                color: '#ffffff'
+              });
+            });
+        }
+      });
     }
   </script>
 

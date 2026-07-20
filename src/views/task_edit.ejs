@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="<%= currentLang %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editar Tarefa - Black Bird Media Center</title>
+</head>
+<body class="bg-dark text-light min-vh-screen">
+
+  <%- include('header') %>
+
+  <!-- Modal de Upload (Necessário por estar no header.ejs) -->
+  <div class="modal fade animate" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-content-premium border-0">
+        <div class="modal-header modal-header-premium border-0">
+          <h5 class="modal-title font-outfit fw-bold text-white" id="uploadModalLabel">Upload de Arquivos</h5>
+          <button type="button" class="btn-close btn-close-white" onclick="toggleUploadModal()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <input type="hidden" id="currentPath" value="">
+          <label class="d-flex flex-column align-items-center justify-content-center w-100 border border-secondary border-dashed rounded-3 cursor-pointer p-4 bg-dark bg-opacity-25 hover-bg-dark transition-all-200 select-files-box" style="height: 176px; border-style: dashed !important; border-width: 2px !important; border-color: rgba(255,255,255,0.1) !important;">
+            <div class="d-flex flex-column align-items-center justify-content-center text-center">
+              <i class="bi bi-cloud-arrow-up text-secondary fs-1 mb-2 upload-icon"></i>
+              <p class="mb-1 text-light fw-bold small">Selecione arquivos para upload</p>
+              <p class="text-secondary small mb-0" style="font-size: 11px;">Mídia enviada ficará disponível na raiz</p>
+            </div>
+            <input type="file" id="fileInput" class="d-none" multiple>
+          </label>
+        </div>
+        <div class="modal-footer modal-footer-premium border-0">
+          <button type="button" class="btn btn-premium-secondary" onclick="toggleUploadModal()">Cancelar</button>
+          <button type="button" class="btn btn-premium-primary border-0" id="uploadFilesBtn">Enviar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Criar Pasta (Necessário por estar no header.ejs) -->
+  <div class="modal fade animate" id="createFolderModal" tabindex="-1" aria-labelledby="createFolderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-content-premium border-0">
+        <div class="modal-header modal-header-premium border-0">
+          <h5 class="modal-title font-outfit fw-bold text-white" id="createFolderModalLabel"><%= t('create_folder') %></h5>
+          <button type="button" class="btn-close btn-close-white" onclick="toggleCreateFolderModal()" aria-label="Close"></button>
+        </div>
+        <form action="/create-dir" method="POST" class="m-0">
+          <div class="modal-body p-4">
+            <input type="hidden" name="path" id="createFolderPathInput" value="">
+            <div class="mb-3">
+              <label for="dirNameInput" class="form-label text-uppercase text-secondary fw-semibold small tracking-wider mb-2"><%= t('folder_name') %></label>
+              <input type="text" id="dirNameInput" name="dirName" placeholder="Ex: Pasta Nova" required class="form-control input-premium">
+            </div>
+          </div>
+          <div class="modal-footer modal-footer-premium border-0">
+            <button type="button" class="btn btn-premium-secondary" onclick="toggleCreateFolderModal()"><%= t('cancel') %></button>
+            <button type="submit" class="btn btn-premium-primary border-0"><%= t('create') %></button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-xl py-4 px-3">
+    
+    <!-- Título & Breadcrumb -->
+    <div class="mb-4">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <a href="/tasks?project=<%= project.id %>" class="btn btn-premium-secondary btn-sm py-1 px-2 d-inline-flex align-items-center gap-1.5" style="font-size: 11px; border-radius: 8px;">
+          <i class="bi bi-arrow-left"></i>
+          <span>Voltar ao Quadro</span>
+        </a>
+        <span class="text-secondary">/</span>
+        <span class="text-fuchsia-500 fw-bold font-outfit text-uppercase" style="font-size: 11px; letter-spacing: 0.5px;"><%= project.name %></span>
+      </div>
+      <h2 class="fs-4 fw-bold text-white font-outfit m-0">Editar Tarefa</h2>
+      <p class="text-secondary small m-0 mt-1">Ajuste os dados e mude o status para facilitar a navegação mobile.</p>
+    </div>
+
+    <!-- Form Container -->
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-8">
+        
+        <div class="card border border-secondary border-opacity-10 shadow-lg" style="background-color: rgba(15, 23, 42, 0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 16px;">
+          <div class="card-header border-bottom border-secondary border-opacity-10 bg-transparent py-3 px-4">
+            <h5 class="card-title font-outfit fw-semibold text-white m-0 d-flex align-items-center gap-2">
+              <i class="bi bi-pencil-square text-gradient"></i>
+              Detalhes da Tarefa: <%= card.title %>
+            </h5>
+          </div>
+
+          <div class="card-body p-4">
+            
+            <% if (typeof successMsg !== 'undefined' && successMsg) { %>
+              <div class="alert alert-success py-2 px-3 small border-0 mb-4 animate-fade-in" style="background-color: rgba(25, 135, 84, 0.15); color: #75b798; border-radius: 8px;">
+                <i class="bi bi-check-circle-fill me-2"></i> <%= successMsg %>
+              </div>
+            <% } %>
+
+            <form action="/tasks/edit/<%= card.id %>" method="POST">
+              
+              <!-- Título da Tarefa -->
+              <div class="mb-4">
+                <label for="title" class="form-label text-white fw-semibold mb-1" style="font-size: 14px;">Título da Tarefa</label>
+                <input type="text" id="title" name="title" value="<%= card.title %>" required placeholder="Ex: Revisar PRD de Segurança" class="form-control input-premium">
+              </div>
+
+              <!-- Descrição -->
+              <div class="mb-4">
+                <label for="description" class="form-label text-white fw-semibold mb-1" style="font-size: 14px;">Descrição</label>
+                <textarea id="description" name="description" rows="4" placeholder="Detalhes da tarefa..." class="form-control input-premium"><%= card.description || '' %></textarea>
+              </div>
+
+              <!-- Status / Coluna do Kanban -->
+              <div class="mb-4 pb-4 border-bottom border-secondary border-opacity-10">
+                <label for="columnId" class="form-label text-white fw-semibold mb-1" style="font-size: 14px;">Status (Coluna)</label>
+                <p class="text-secondary small mb-2" style="font-size: 11px;">Mova a tarefa diretamente para outra coluna para atualizar seu progresso.</p>
+                <select id="columnId" name="columnId" class="form-select form-control input-premium pe-5" style="max-width: 400px; background-color: rgba(15, 23, 42, 0.45);">
+                  <option value="todo" <%= column.id === 'todo' ? 'selected' : '' %>>To Do</option>
+                  <option value="doing" <%= column.id === 'doing' ? 'selected' : '' %>>Doing</option>
+                  <option value="validation" <%= column.id === 'validation' ? 'selected' : '' %>>Validation</option>
+                  <option value="done" <%= column.id === 'done' ? 'selected' : '' %>>Done</option>
+                </select>
+              </div>
+
+              <div class="row g-3 mb-4">
+                <!-- Categoria -->
+                <div class="col-md-6">
+                  <label for="category" class="form-label text-white fw-semibold small mb-1">Categoria</label>
+                  <input type="text" id="category" name="category" value="<%= card.category || '' %>" placeholder="Ex: Dev, Bugs, Infra" class="form-control input-premium">
+                </div>
+                
+                <!-- Cor da Etiqueta -->
+                <div class="col-md-6">
+                  <label for="labelColor" class="form-label text-white fw-semibold small mb-1">Cor da Etiqueta</label>
+                  <select id="labelColor" name="labelColor" class="form-select form-control input-premium pe-5" style="background-color: rgba(15, 23, 42, 0.45);">
+                    <option value="default" <%= card.labelColor === 'default' ? 'selected' : '' %>>Cinza (Padrão)</option>
+                    <option value="red" <%= card.labelColor === 'red' ? 'selected' : '' %>>Vermelho (Urgente)</option>
+                    <option value="blue" <%= card.labelColor === 'blue' ? 'selected' : '' %>>Azul (Trabalho)</option>
+                    <option value="green" <%= card.labelColor === 'green' ? 'selected' : '' %>>Verde (Fácil)</option>
+                    <option value="yellow" <%= card.labelColor === 'yellow' ? 'selected' : '' %>>Amarelo (Médio)</option>
+                    <option value="purple" <%= card.labelColor === 'purple' ? 'selected' : '' %>>Roxo (Idéia)</option>
+                  </select>
+                </div>
+
+                <!-- Data de Vencimento -->
+                <div class="col-md-6">
+                  <label for="dueDate" class="form-label text-white fw-semibold small mb-1">Data de Vencimento</label>
+                  <input type="date" id="dueDate" name="dueDate" value="<%= card.dueDate || '' %>" class="form-control input-premium">
+                </div>
+
+                <!-- Etiquetas -->
+                <div class="col-md-6">
+                  <label for="labels" class="form-label text-white fw-semibold small mb-1">Etiquetas (Separadas por vírgula)</label>
+                  <input type="text" id="labels" name="labels" value="<%= card.labels ? card.labels.join(', ') : '' %>" placeholder="Ex: Urgente, Frontend, API" class="form-control input-premium">
+                </div>
+              </div>
+
+              <!-- Botões de Ação -->
+              <div class="d-flex justify-content-end gap-3 mt-4 pt-3 border-top border-secondary border-opacity-10">
+                <a href="/tasks?project=<%= project.id %>" class="btn btn-premium-secondary px-4"><%= t('cancel') %></a>
+                <button type="submit" class="btn btn-premium-primary border-0 px-4">Salvar Alterações</button>
+              </div>
+
+            </form>
+
+          </div>
+        </div>
+
+        <!-- Card de Comentários -->
+        <div class="card border border-secondary border-opacity-10 shadow-lg mt-4" style="background-color: rgba(15, 23, 42, 0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 16px;">
+          <div class="card-header border-bottom border-secondary border-opacity-10 bg-transparent py-3 px-4">
+            <h5 class="card-title font-outfit fw-semibold text-white m-0 d-flex align-items-center gap-2">
+              <i class="bi bi-chat-left-text text-gradient"></i>
+              Comentários e Feedbacks (<span id="commentsCountLabel"><%= (card.comments || []).length %></span>)
+            </h5>
+          </div>
+
+          <div class="card-body p-4">
+            <!-- Lista de Comentários -->
+            <div id="taskCommentsList" class="mb-4 pe-1" style="max-height: 400px; overflow-y: auto;">
+              <!-- Renderizado via JS -->
+            </div>
+
+            <!-- Adicionar Comentário -->
+            <form id="addCommentForm">
+              <input type="hidden" id="commentTaskIdInput" value="<%= card.id %>">
+              <div class="input-group mb-2">
+                <input type="text" id="newCommentTextInput" placeholder="Escreva um comentário..." class="form-control input-premium border-end-0 py-2.5" required style="border-top-left-radius: 8px; border-bottom-left-radius: 8px;">
+                <button type="button" class="btn btn-premium-secondary border-start-0 border-end-0 px-3" onclick="triggerCommentAttachment()" title="Anexar Imagem/Vídeo">
+                  <i class="bi bi-paperclip text-secondary"></i>
+                </button>
+                <button type="submit" class="btn btn-premium-primary border-start-0 px-3.5" style="border-top-right-radius: 8px; border-bottom-right-radius: 8px;" id="sendCommentBtn">
+                  <i class="bi bi-send-fill text-white"></i>
+                </button>
+              </div>
+              <input type="file" id="commentAttachmentInput" accept="image/*,video/*" multiple class="d-none" onchange="handleCommentAttachmentSelect(event)">
+              <div id="commentAttachmentsPreview" class="d-flex flex-wrap gap-1.5 small mb-2 d-none"></div>
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- JS assets -->
+  <script src="/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/sweetalert2.all.min.js"></script>
+  <script src="/js/scripts.js"></script>
+
+  <script>
+    let commentsData = <%- JSON.stringify(card.comments || []) %>;
+    const cardId = "<%= card.id %>";
+    let selectedCommentAttachments = [];
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function triggerCommentAttachment() {
+      document.getElementById('commentAttachmentInput').click();
+    }
+
+    function handleCommentAttachmentSelect(e) {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      
+      const previewContainer = document.getElementById('commentAttachmentsPreview');
+      previewContainer.classList.remove('d-none');
+      
+      Array.from(files).forEach(file => {
+        selectedCommentAttachments.push(file);
+      });
+      
+      renderCommentAttachmentsPreview();
+      e.target.value = '';
+    }
+
+    function removeSelectedCommentAttachment(e, index) {
+      e.stopPropagation();
+      selectedCommentAttachments.splice(index, 1);
+      renderCommentAttachmentsPreview();
+    }
+
+    function renderCommentAttachmentsPreview() {
+      const previewContainer = document.getElementById('commentAttachmentsPreview');
+      previewContainer.innerHTML = '';
+      
+      if (selectedCommentAttachments.length === 0) {
+        previewContainer.classList.add('d-none');
+        return;
+      }
+      
+      previewContainer.classList.remove('d-none');
+      selectedCommentAttachments.forEach((file, index) => {
+        const pill = document.createElement('span');
+        pill.className = 'badge bg-secondary bg-opacity-25 border border-secondary border-opacity-25 text-white d-inline-flex align-items-center gap-1.5 py-1 px-2';
+        pill.style.fontSize = '10px';
+        pill.style.borderRadius = '6px';
+        
+        const iconClass = file.type.startsWith('image/') ? 'bi-image' : 'bi-film';
+        pill.innerHTML = `
+          <i class="bi ${iconClass}"></i>
+          <span class="text-truncate" style="max-width: 80px;">${escapeHtml(file.name)}</span>
+          <i class="bi bi-x-circle-fill text-danger cursor-pointer" onclick="removeSelectedCommentAttachment(event, ${index})"></i>
+        `;
+        previewContainer.appendChild(pill);
+      });
+    }
+
+    function uploadCommentAttachments(files, cardId, commentId) {
+      if (!files || files.length === 0) {
+        return Promise.resolve([]);
+      }
+      
+      const CHUNK_SIZE = 5 * 1024 * 1024;
+      
+      if (window.Swal) {
+        Swal.fire({
+          title: 'Enviando anexos...',
+          text: 'Fazendo upload das mídias...',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+      }
+
+      let uploadedList = [];
+      let chain = Promise.resolve();
+      
+      files.forEach(file => {
+        chain = chain.then(() => {
+          return new Promise((resolve, reject) => {
+            const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+            let chunkIndex = 0;
+            let finalUrl = '';
+            
+            function uploadNext() {
+              if (chunkIndex >= totalChunks) {
+                uploadedList.push({
+                  type: file.type.startsWith('image/') ? 'image' : 'video',
+                  url: finalUrl || ('/shared/' + encodeURIComponent(file.name)),
+                  name: file.name
+                });
+                resolve();
+                return;
+              }
+              
+              const start = chunkIndex * CHUNK_SIZE;
+              const end = Math.min(start + CHUNK_SIZE, file.size);
+              const chunk = file.slice(start, end);
+              
+              const targetFolder = `tasks/${cardId}/${commentId}`;
+              const url = `/upload-chunk?chunkIndex=${chunkIndex}&totalChunks=${totalChunks}&fileName=${encodeURIComponent(file.name)}&currentPath=${encodeURIComponent(targetFolder)}`;
+              
+              fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/octet-stream' },
+                body: chunk
+              })
+              .then(res => res.json())
+              .then(result => {
+                if (result.success) {
+                  if (result.url) {
+                    finalUrl = result.url;
+                  }
+                  chunkIndex++;
+                  uploadNext();
+                } else {
+                  reject(new Error(result.error || 'Erro ao enviar fragmento do arquivo'));
+                }
+              })
+              .catch(err => reject(err));
+            }
+            
+            uploadNext();
+          });
+        });
+      });
+      
+      return chain.then(() => {
+        if (window.Swal) Swal.close();
+        return uploadedList;
+      });
+    }
+
+    function viewCommentFullScreen(url, type, text) {
+      const overlay = document.createElement('div');
+      overlay.id = 'commentFullScreenOverlay';
+      overlay.style.position = 'fixed';
+      overlay.style.top = '0';
+      overlay.style.left = '0';
+      overlay.style.width = '100vw';
+      overlay.style.height = '100vh';
+      overlay.style.backgroundColor = '#000000';
+      overlay.style.zIndex = '9999';
+      overlay.style.display = 'flex';
+      overlay.style.flexDirection = 'column';
+      overlay.style.justifyContent = 'center';
+      overlay.style.alignItems = 'center';
+      overlay.style.animation = 'fadeIn 0.3s ease';
+
+      const closeBtn = document.createElement('button');
+      closeBtn.innerHTML = '<i class="bi bi-x-lg fs-4"></i>';
+      closeBtn.style.position = 'absolute';
+      closeBtn.style.top = '1.5rem';
+      closeBtn.style.right = '1.5rem';
+      closeBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+      closeBtn.style.border = 'none';
+      closeBtn.style.color = '#ffffff';
+      closeBtn.style.width = '44px';
+      closeBtn.style.height = '44px';
+      closeBtn.style.borderRadius = '50%';
+      closeBtn.style.cursor = 'pointer';
+      closeBtn.style.zIndex = '10000';
+      closeBtn.onclick = () => {
+        overlay.style.animation = 'fadeOut 0.3s ease';
+        setTimeout(() => overlay.remove(), 250);
+      };
+      overlay.appendChild(closeBtn);
+
+      let mediaEl;
+      if (type === 'image') {
+        mediaEl = document.createElement('img');
+        mediaEl.src = url;
+        mediaEl.style.maxWidth = '90%';
+        mediaEl.style.maxHeight = '80vh';
+        mediaEl.style.objectFit = 'contain';
+      } else {
+        mediaEl = document.createElement('video');
+        mediaEl.src = url;
+        mediaEl.controls = true;
+        mediaEl.autoplay = true;
+        mediaEl.style.maxWidth = '90%';
+        mediaEl.style.maxHeight = '80vh';
+      }
+      mediaEl.style.borderRadius = '8px';
+      overlay.appendChild(mediaEl);
+
+      if (text) {
+        const textOverlay = document.createElement('div');
+        textOverlay.style.position = 'absolute';
+        textOverlay.style.bottom = '0';
+        textOverlay.style.width = '100%';
+        textOverlay.style.background = 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 70%, rgba(0,0,0,0) 100%)';
+        textOverlay.style.padding = '2rem 1.5rem';
+        textOverlay.style.textAlign = 'center';
+        
+        const textP = document.createElement('p');
+        textP.className = 'font-outfit text-white m-0';
+        textP.style.fontSize = '15px';
+        textP.style.lineHeight = '1.5';
+        textP.textContent = text;
+        textOverlay.appendChild(textP);
+        
+        overlay.appendChild(textOverlay);
+      }
+
+      if (!document.getElementById('fullScreenAnimationStyles')) {
+        const style = document.createElement('style');
+        style.id = 'fullScreenAnimationStyles';
+        style.innerHTML = `
+          @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+          @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        `;
+        document.head.appendChild(style);
+      }
+
+      document.body.appendChild(overlay);
+    }
+
+    function editCommentClick(commentId, currentText) {
+      Swal.fire({
+        title: 'Editar Comentário',
+        input: 'textarea',
+        inputValue: currentText,
+        showCancelButton: true,
+        confirmButtonColor: '#7c3aed',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Salvar',
+        cancelButtonText: 'Cancelar',
+        background: '#0f172a',
+        color: '#ffffff'
+      }).then(result => {
+        if (result.isConfirmed && result.value.trim()) {
+          fetch('/api/tasks/comment/edit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              taskId: cardId,
+              commentId: commentId,
+              text: result.value.trim()
+            })
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              commentsData = data.tasks.projects["<%= project.id %>"].columns["<%= column.id %>"]?.cards.find(c => c.id === cardId)?.comments || [];
+              
+              // If not found in column, search other columns (due to relocation)
+              if (!commentsData || commentsData.length === 0) {
+                Object.keys(data.tasks.projects["<%= project.id %>"].columns).forEach(colId => {
+                  const card = data.tasks.projects["<%= project.id %>"].columns[colId].cards.find(c => c.id === cardId);
+                  if (card) {
+                    commentsData = card.comments || [];
+                  }
+                });
+              }
+              
+              renderCommentsList();
+            }
+          });
+        }
+      });
+    }
+
+    function deleteCommentClick(commentId) {
+      Swal.fire({
+        title: 'Excluir Comentário?',
+        text: 'Essa ação não poderá ser desfeita!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Excluir',
+        cancelButtonText: 'Cancelar',
+        background: '#0f172a',
+        color: '#ffffff'
+      }).then(result => {
+        if (result.isConfirmed) {
+          fetch('/api/tasks/comment/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ taskId: cardId, commentId: commentId })
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              commentsData = data.tasks.projects["<%= project.id %>"].columns["<%= column.id %>"]?.cards.find(c => c.id === cardId)?.comments || [];
+              
+              if (!commentsData || commentsData.length === 0) {
+                Object.keys(data.tasks.projects["<%= project.id %>"].columns).forEach(colId => {
+                  const card = data.tasks.projects["<%= project.id %>"].columns[colId].cards.find(c => c.id === cardId);
+                  if (card) {
+                    commentsData = card.comments || [];
+                  }
+                });
+              }
+              
+              renderCommentsList();
+            }
+          });
+        }
+      });
+    }
+
+    function renderCommentsList() {
+      const container = document.getElementById('taskCommentsList');
+      container.innerHTML = '';
+      
+      const countLabel = document.getElementById('commentsCountLabel');
+      if (countLabel) {
+        countLabel.textContent = commentsData.length;
+      }
+      
+      if (!commentsData || commentsData.length === 0) {
+        container.innerHTML = `<div class="text-secondary text-center small mt-4 font-outfit">Nenhum comentário ainda.</div>`;
+        return;
+      }
+      
+      commentsData.forEach(c => {
+        const date = new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const day = new Date(c.timestamp).toLocaleDateString([], { day: '2-digit', month: '2-digit' });
+        const authorBadge = c.author === 'Human' || c.author === 'admin' ? '👤 Humano' : '🤖 ' + c.author;
+        
+        let attachmentsHtml = '';
+        if (c.attachments && c.attachments.length > 0) {
+          attachmentsHtml = '<div class="comment-attachments mt-2 d-flex flex-wrap gap-2">';
+          c.attachments.forEach(att => {
+            if (att.type === 'image') {
+              attachmentsHtml += `
+                <div class="comment-att-item position-relative cursor-pointer" onclick="viewCommentFullScreen('${att.url}', 'image', '${escapeHtml(c.text)}')">
+                  <img src="${att.url}" class="rounded border border-secondary border-opacity-20 hover-opacity-75 transition-all-200" style="width: 80px; height: 80px; object-fit: cover;">
+                </div>
+              `;
+            } else if (att.type === 'video') {
+              attachmentsHtml += `
+                <div class="comment-att-item position-relative cursor-pointer" onclick="viewCommentFullScreen('${att.url}', 'video', '${escapeHtml(c.text)}')" style="width: 80px; height: 80px;">
+                  <video src="${att.url}" class="rounded border border-secondary border-opacity-20" style="width: 100%; height: 100%; object-fit: cover;"></video>
+                  <div class="position-absolute top-50 start-50 translate-middle bg-dark bg-opacity-70 rounded-circle d-flex align-items-center justify-content-center" style="width: 28px; height: 28px;">
+                    <i class="bi bi-play-fill text-white fs-6" style="margin-left: 2px;"></i>
+                  </div>
+                </div>
+              `;
+            }
+          });
+          attachmentsHtml += '</div>';
+        }
+
+        container.innerHTML += `
+          <div class="mb-2 p-2.5 rounded border border-secondary border-opacity-10" style="background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(8px);">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="fw-semibold text-gradient small font-outfit" style="font-size: 11px;">${escapeHtml(authorBadge)}</span>
+              <div class="d-flex align-items-center gap-2">
+                <span class="text-secondary font-outfit" style="font-size: 9px;">${day} às ${date}</span>
+                <button class="btn btn-link p-0 text-secondary hover-text-info border-0" onclick="editCommentClick('${c.id}', '${escapeHtml(c.text)}')">
+                  <i class="bi bi-pencil" style="font-size: 11px;"></i>
+                </button>
+                <a class="text-secondary hover-text-info d-inline-flex align-items-center" href="/tasks/comment/${c.id}" title="Editar (Nova Tela)">
+                  <i class="bi bi-window-fullscreen" style="font-size: 10px;"></i>
+                </a>
+                <button class="btn btn-link p-0 text-secondary hover-text-danger border-0" onclick="deleteCommentClick('${c.id}')">
+                  <i class="bi bi-trash" style="font-size: 11px;"></i>
+                </button>
+              </div>
+            </div>
+            <div class="text-white small font-outfit" style="font-size: 12px; line-height: 1.4; color: #e2e8f0 !important;">${escapeHtml(c.text)}</div>
+            ${attachmentsHtml}
+          </div>
+        `;
+      });
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // Init comments list rendering
+    renderCommentsList();
+
+    const commentForm = document.getElementById('addCommentForm');
+    if (commentForm) {
+      commentForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const commentText = document.getElementById('newCommentTextInput').value.trim();
+        if (!commentText || !cardId) return;
+        
+        const sendBtn = document.getElementById('sendCommentBtn');
+        if (sendBtn) sendBtn.disabled = true;
+        
+        const commentId = 'comment_' + Math.random().toString(36).substring(2, 9);
+        
+        uploadCommentAttachments(selectedCommentAttachments, cardId, commentId)
+          .then(attachments => {
+            return fetch('/api/tasks/comment/add', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                taskId: cardId,
+                commentId: commentId,
+                author: 'Human',
+                text: commentText,
+                attachments: attachments
+              })
+            });
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (sendBtn) sendBtn.disabled = false;
+            if (data.success) {
+              document.getElementById('newCommentTextInput').value = '';
+              selectedCommentAttachments = [];
+              renderCommentAttachmentsPreview();
+              
+              commentsData = data.tasks.projects["<%= project.id %>"].columns["<%= column.id %>"]?.cards.find(c => c.id === cardId)?.comments || [];
+              
+              if (!commentsData || commentsData.length === 0) {
+                Object.keys(data.tasks.projects["<%= project.id %>"].columns).forEach(colId => {
+                  const card = data.tasks.projects["<%= project.id %>"].columns[colId].cards.find(c => c.id === cardId);
+                  if (card) {
+                    commentsData = card.comments || [];
+                  }
+                });
+              }
+              
+              renderCommentsList();
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: data.error || 'Falha ao adicionar comentário'
+              });
+            }
+          })
+          .catch(err => {
+            if (sendBtn) sendBtn.disabled = false;
+            Swal.fire({
+              icon: 'error',
+              title: 'Erro',
+              text: err.message
+            });
+          });
+      });
+    }
+  </script>
+
+</body>
+</html>

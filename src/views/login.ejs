@@ -37,6 +37,14 @@
     <% } %>
 
     <form action="/login/auth" method="POST" class="text-start">
+      <% if (typeof redirectTo !== 'undefined' && redirectTo) { %>
+        <input type="hidden" name="redirectTo" value="<%= redirectTo %>">
+      <% } %>
+      <div class="mb-3">
+        <label for="username" class="form-label text-secondary small fw-semibold text-uppercase tracking-wider mb-2"><%= t('username') %></label>
+        <input type="text" id="username" name="username" placeholder="Digite seu usuário" required class="form-control input-premium text-center">
+      </div>
+
       <div class="mb-4">
         <label for="password" class="form-label text-secondary small fw-semibold text-uppercase tracking-wider mb-2"><%= t('login_password') %></label>
         <div class="position-relative">

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="<%= currentLang %>">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= t('notifications') %> - Black Bird Media Center</title>
+  <style>
+    .notifications-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    body {
+      background-color: #0b0f19 !important;
+      color: #f8fafc !important;
+    }
+
+    .notification-card {
+      background: rgba(15, 23, 42, 0.6) !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      backdrop-filter: blur(12px) !important;
+      -webkit-backdrop-filter: blur(12px) !important;
+      border-radius: 16px !important;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+      overflow: hidden;
+    }
+
+    .notification-item {
+      background: transparent !important;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+      display: flex;
+      gap: 1.25rem;
+      align-items: flex-start;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .notification-item:last-child {
+      border-bottom: none !important;
+    }
+
+    .notification-item.unread {
+      background: rgba(124, 58, 237, 0.06) !important;
+    }
+
+    .notification-item.unread::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: #7c3aed;
+      border-top-left-radius: 4px;
+      border-bottom-left-radius: 4px;
+    }
+
+    .notification-icon-wrapper {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .icon-alert {
+      background: rgba(239, 68, 68, 0.12);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.15);
+    }
+
+    .icon-info {
+      background: rgba(59, 130, 246, 0.12);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.15);
+    }
+
+    .notification-body {
+      flex-grow: 1;
+      min-width: 0;
+    }
+
+    .notification-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 0.35rem;
+    }
+
+    .notification-message {
+      font-size: 13px;
+      color: #94a3b8;
+      line-height: 1.5;
+      margin-bottom: 0;
+    }
+
+    .notification-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.6rem;
+    }
+
+    .notification-time {
+      font-size: 11px;
+      color: #64748b;
+    }
+
+    .notification-actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .btn-notif-action {
+      background: none;
+      border: none;
+      color: #64748b;
+      font-size: 12px;
+      cursor: pointer;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-notif-action:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .btn-notif-action.read-toggle:hover {
+      color: #a78bfa;
+    }
+  </style>
+</head>
+
+<body class="bg-dark text-light min-vh-screen">
+
+  <%- include('header') %>
+
+  <!-- Modal de Upload (Necessário por estar no header.ejs) -->
+  <div class="modal fade animate" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-content-premium border-0">
+        <div class="modal-header modal-header-premium border-0">
+          <h5 class="modal-title font-outfit fw-bold text-white" id="uploadModalLabel">Upload de Arquivos</h5>
+          <button type="button" class="btn-close btn-close-white" onclick="toggleUploadModal()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <input type="hidden" id="currentPath" value="">
+          <label class="d-flex flex-column align-items-center justify-content-center w-100 border border-secondary border-dashed rounded-3 cursor-pointer p-4 bg-dark bg-opacity-25 hover-bg-dark transition-all-200 select-files-box" style="height: 176px; border-style: dashed !important; border-width: 2px !important; border-color: rgba(255,255,255,0.1) !important;">
+            <div class="d-flex flex-column align-items-center justify-content-center text-center">
+              <i class="bi bi-cloud-arrow-up text-secondary fs-1 mb-2 upload-icon"></i>
+              <p class="mb-1 text-light fw-bold small">Selecione arquivos para upload</p>
+              <p class="text-secondary small mb-0" style="font-size: 11px;">Mídia enviada ficará disponível na raiz</p>
+            </div>
+            <input type="file" id="fileInput" class="d-none" multiple>
+          </label>
+        </div>
+        <div class="modal-footer modal-footer-premium border-0">
+          <button type="button" class="btn btn-premium-secondary" onclick="toggleUploadModal()">Cancelar</button>
+          <button type="button" class="btn btn-premium-primary border-0" id="uploadFilesBtn">Enviar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Criar Pasta (Necessário por estar no header.ejs) -->
+  <div class="modal fade animate" id="createFolderModal" tabindex="-1" aria-labelledby="createFolderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-content-premium border-0">
+        <div class="modal-header modal-header-premium border-0">
+          <h5 class="modal-title font-outfit fw-bold text-white" id="createFolderModalLabel"><%= t('create_folder') %></h5>
+          <button type="button" class="btn-close btn-close-white" onclick="toggleCreateFolderModal()" aria-label="Close"></button>
+        </div>
+        <form action="/create-dir" method="POST" class="m-0">
+          <div class="modal-body p-4">
+            <input type="hidden" name="path" id="createFolderPathInput" value="">
+            <div class="mb-3">
+              <label for="dirNameInput" class="form-label text-uppercase text-secondary fw-semibold small tracking-wider mb-2"><%= t('folder_name') %></label>
+              <input type="text" id="dirNameInput" name="dirName" placeholder="Ex: Pasta Nova" required class="form-control input-premium">
+            </div>
+          </div>
+          <div class="modal-footer modal-footer-premium border-0">
+            <button type="button" class="btn btn-premium-secondary" onclick="toggleCreateFolderModal()"><%= t('cancel') %></button>
+            <button type="submit" class="btn btn-premium-primary border-0"><%= t('create') %></button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTAINER PRINCIPAL -->
+  <div class="container-xl py-5 px-3">
+    <div class="notifications-container">
+      
+      <!-- Cabeçalho -->
+      <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
+        <div>
+          <h2 class="fs-3 fw-bold text-white font-outfit m-0">
+            <i class="bi bi-bell text-warning me-2"></i>Central de Notificações
+          </h2>
+          <p class="text-secondary small m-0 mt-1">
+            Veja as recomendações, tarefas pendentes e alertas enviados pelo Agente de IA.
+          </p>
+        </div>
+        
+        <% if (notificationsList && notificationsList.length > 0) { %>
+          <div class="d-flex gap-2">
+            <button class="btn btn-premium-secondary btn-sm py-1.5 px-3" onclick="markAllAsRead()">
+              <i class="bi bi-check2-all me-1"></i>Marcar todas como lidas
+            </button>
+            <button class="btn btn-premium-secondary btn-sm py-1.5 px-3 text-danger" onclick="clearAllNotifications()">
+              <i class="bi bi-trash me-1"></i>Limpar
+            </button>
+          </div>
+        <% } %>
+      </div>
+
+      <!-- Quadro de Notificações -->
+      <div class="card notification-card border-0">
+        <% if (!notificationsList || notificationsList.length === 0) { %>
+          <div class="text-center py-5">
+            <i class="bi bi-bell-slash text-secondary fs-1 mb-2 d-block"></i>
+            <p class="text-secondary mb-0">Nenhuma notificação por aqui no momento.</p>
+          </div>
+        <% } else { %>
+          <div class="list-group list-group-flush rounded-4 overflow-hidden" style="background: transparent;">
+            <% notificationsList.forEach(notif => { %>
+              <div class="notification-item <%= notif.read ? '' : 'unread' %>" id="notif-item-<%= notif.id %>">
+                <!-- Ícone representativo baseando no tipo -->
+                <div class="notification-icon-wrapper <%= notif.type === 'alert' ? 'icon-alert' : 'icon-info' %>">
+                  <i class="bi <%= notif.type === 'alert' ? 'bi-exclamation-triangle-fill' : 'bi-info-circle-fill' %> fs-5"></i>
+                </div>
+                
+                <div class="notification-body">
+                  <div class="d-flex justify-content-between align-items-start gap-3">
+                    <h5 class="notification-title"><%= notif.title %></h5>
+                  </div>
+                  <!-- Mensagem do alerta convertida para renderizar quebras e negrito -->
+                  <p class="notification-message">
+                    <%- notif.message.replace(/\n/g, '<br>').replace(/\*\*([\s\S]+?)\*\*/g, '<strong>$1</strong>') %>
+                  </p>
+                  
+                  <div class="notification-meta">
+                    <span class="notification-time">
+                      <%= new Date(notif.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) %>
+                    </span>
+                    
+                    <div class="notification-actions">
+                      <!-- Ação Ir para Kanban (se houver menção a tarefas) -->
+                      <% if (notif.message.includes('/tasks') || notif.title.includes('Tarefa') || notif.title.includes('Atividades')) { %>
+                        <a href="/tasks" class="btn-notif-action text-info text-decoration-none">
+                          <i class="bi bi-kanban"></i> Abrir Quadro
+                        </a>
+                      <% } %>
+                      <button class="btn-notif-action read-toggle" onclick="toggleReadState('<%= notif.id %>')">
+                        <i class="bi <%= notif.read ? 'bi-envelope' : 'bi-envelope-open' %>"></i>
+                        <span><%= notif.read ? 'Marcar como não lida' : 'Marcar como lida' %></span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/sweetalert2.all.min.js"></script>
+  
+  <script>
+    function toggleReadState(id) {
+      fetch('/api/notifications/toggle-read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          const item = document.getElementById(`notif-item-${id}`);
+          const btn = item.querySelector('.read-toggle');
+          
+          if (data.read) {
+            item.classList.remove('unread');
+            btn.innerHTML = '<i class="bi bi-envelope"></i><span>Marcar como não lida</span>';
+          } else {
+            item.classList.add('unread');
+            btn.innerHTML = '<i class="bi bi-envelope-open"></i><span>Marcar como lida</span>';
+          }
+          
+          // Recarregar após um curto delay para atualizar o badge do menu do header
+          setTimeout(() => window.location.reload(), 100);
+        }
+      })
+      .catch(err => console.error('Erro ao alternar leitura:', err));
+    }
+
+    function markAllAsRead() {
+      fetch('/api/notifications/read-all', { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            window.location.reload();
+          }
+        });
+    }
+
+    function clearAllNotifications() {
+      Swal.fire({
+        title: 'Limpar Notificações?',
+        text: "Todas as notificações do histórico serão apagadas permanentemente!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sim, limpar!',
+        cancelButtonText: 'Cancelar',
+        background: '#0f172a',
+        color: '#ffffff'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch('/api/notifications/clear', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                window.location.reload();
+              }
+            });
+        }
+      });
+    }
+  </script>
+</body>
+</html>
